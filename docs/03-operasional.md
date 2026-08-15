@@ -93,7 +93,7 @@ Aplikasi fitur-lengkap dan semua cek hijau, tetapi **belum di-deploy ke produksi
 2. Harden `.env`: `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` baru, kredensial DB non-root (saat ini `root`/password).
 3. Konfigurasi `MAIL_*` (e-mail autentikasi: verifikasi email, reset password) dan `FONNTE_API_KEY` (WhatsApp: kiriman **manual** link tracking ke pelanggan **dan** OTP 2FA).
 4. Pasang cron scheduler (di atas).
-5. Opsional sebelum dipercaya di toko sungguhan: audit log untuk aksi finansial & E2E Playwright.
+5. Opsional sebelum dipercaya di toko sungguhan: E2E Playwright (audit log aksi finansial sudah ada).
 
 > **Penting**: OTP 2FA WhatsApp **hanya terkirim asli saat `APP_ENV=production`**. Di lokal/testing kode hanya di-log — jadi tanpa `.env` produksi yang benar, staf yang mengaktifkan 2FA WhatsApp tidak akan menerima kode.
 

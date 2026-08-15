@@ -26,7 +26,7 @@ Belum pernah live. Urutan eksekusi lengkap ada di `docs/03-operasional.md` & `do
 Sudah lama ada di roadmap. Catat siapa mengubah apa pada: pembayaran, retur, ubah status servis, ubah stok, login 2FA. Minimal: tabel `audit_logs` + middleware/event `Observer` di model finansial. Pintu masuk wajib sebelum "percaya" pada produksi. — **SELESAI (2026-08-15)**: tabel + model `AuditLog`, helper `AuditLogger`/`StockManager`, event di sale/purchase/retur/servis/stok/2FA, halaman `/audit-logs` (filter + diff), `AuditLogTest` (9 test). Aturan terkait di `.ai/rules/controllers.md` & `.ai/rules/support.md`.
 
 ### 1.4 Import/export data master & laporan (Excel/CSV)
-Produk, pelanggan, supplier, laporan penjualan/servis/hutang. Pakai `maatwebsite/excel` atau streaming CSV native (hindari beban memori di data besar).
+Produk, pelanggan, supplier, laporan penjualan/servis/hutang. Pakai `maatwebsite/excel` atau streaming CSV native (hindari beban memori di data besar). — **SELESAI (2026-08-15)**: streaming CSV native (`app/Support/CsvStream.php` export + `app/Support/CsvImporter.php` import) — hindari beban memori, BOM UTF-8, anti formula-injection, header dinormalisasi ke snake_case. Export master produk/pelanggan/supplier (`{resource}/export-csv`), laporan penjualan/servis/hutang, dan import master produk/pelanggan/supplier (`{resource}/import-csv`) dari tombol toolbar di halaman index masing-masing. Komponen `ImportCsvDialog`, `ImportExportTest` (9 test). Retur pembelian & PO sengaja belum di-export (belum punya halaman laporan); daftar lengkap di `.ai/rules/support-support.md`.
 
 ## 2. Prioritas menengah
 
@@ -59,6 +59,6 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 2. Deploy produksi per checklist (1–2 hari + verifikasi).
 3. ~~Audit log aksi sensitif (1–2 hari).~~ — **SELESAI (2026-08-15)**.
 4. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
-5. Import/export CSV/Excel (1–2 hari).
+5. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
 6. E2E Playwright smoke (1–2 hari).
 7. Baru setelah itu: PWA offline, thermal print, realtime, multi-cabang (estimasi per-modul saat mulai).

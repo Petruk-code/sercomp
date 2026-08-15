@@ -1,21 +1,20 @@
 # Dokumentasi Proyek SerComp
 
-Folder ini adalah tempat **catatan update & pengembangan proyek**, disusun mengikuti proses kerja: *status saat ini → arsitektur & konvensi → operasional → handoff per modul*.
+Folder ini berisi **catatan status & pengembangan proyek**, disusun mengikuti proses kerja: *status saat ini → arsitektur & konvensi → operasional → briefing kerja*.
 
 | Dokumen | Isi |
 | --- | --- |
-| [`01-status-roadmap.md`](01-status-roadmap.md) | Status proyek saat ini, apa yang sudah selesai, dan rencana kerja berikutnya |
+| [`01-status-roadmap.md`](01-status-roadmap.md) | Status proyek saat ini, riwayat sesi, fitur selesai, todo, dan persiapan produksi |
 | [`02-arsitektur-konvensi.md`](02-arsitektur-konvensi.md) | Struktur proyek, pola yang dipakai, dan konvensi wajib saat mengembangkan |
 | [`03-operasional.md`](03-operasional.md) | PWA & akses HP, scheduler, backup database, dan persiapan produksi |
-| [`04-whatsapp-2fa-otp.md`](04-whatsapp-2fa-otp.md) | WhatsApp 2FA & OTP: cara aktifkan/nonaktifkan, alur kode OTP, konfigurasi, dan recovery lockout |
-| [`05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md) | Peta prioritas pengembangan: prekondisi teknis, jangka pendek/menengah/lanjutan, dan urutan kerja |
-| [`handoff-session.md`](handoff-session.md) | **Prompt/briefing untuk sesi berikutnya**: status terkini, apa yang dikerjakan, dan langkah lanjutan (2FA, kartu lacak unduhan, deploy) |
-| `handoff-supplier-management.md` | Handoff modul supplier & pembelian (status + instruksi kelanjutan) |
+| [`04-whatsapp-2fa-otp.md`](04-whatsapp-2fa-otp.md) | WhatsApp 2FA & OTP: cara aktifkan/nonaktifkan, alur kode OTP, konfigurasi, recovery lockout |
+| [`05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md) | **Peta prioritas pengembangan**: prekondisi teknis, jangka pendek/menengah/lanjutan, urutan kerja |
+| [`handoff-session.md`](handoff-session.md) | **Briefing kerja untuk sesi berikutnya**: posisi proyek, ringkasan yang sudah selesai, dan langkah lanjutan (acuan: `05-rekomendasi-pengembangan.md`) |
 
 ## Cara pakai folder ini
 
-1. **Sebelum mulai kerja**: baca `01-status-roadmap.md` dulu agar tahu posisi proyek, lalu buka rule terkait di `.ai/rules/` sesuai path yang akan disentuh.
-2. **Saat mengerjakan satu modul besar**: buat dokumen *handoff* di folder ini (contoh: `handoff-supplier-management.md`) agar konteks tidak hilang saat pekerjaan dilanjutkan agent/session lain.
-3. **Setelah satu tahap selesai**: perbarui `01-status-roadmap.md` (coret todo yang selesai, catat apa yang dikerjakan).
+1. **Sebelum mulai kerja**: baca `handoff-session.md` dulu agar tahu posisi proyek & langkah lanjutan, lalu buka rule terkait di `.ai/rules/` sesuai path yang akan disentuh.
+2. **Saat mengerjakan satu modul besar**: catat keputusan & aturan durable lewat `record-rule` (tersimpan di `.ai/rules/`), bukan di dokumen — supaya otomatis terbaca agent berikutnya.
+3. **Setelah satu tahap selesai**: perbarui `01-status-roadmap.md` (pindahkan todo ke "Fitur yang sudah selesai", coret yang selesai) dan `05-rekomendasi-pengembangan.md` (tandai rekomendasi SELESAI).
 
 > Ringkasan feature stack & cara instalasi ada di [`../README.md`](../README.md).

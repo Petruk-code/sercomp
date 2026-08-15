@@ -28,8 +28,8 @@ Aplikasi untuk mengelola bisnis servis komputer/laptop/HP dan kasir/penjualan pr
 - Cetak nota/struk & barcode (dompdf); layout dua-panel yang dioptimalkan untuk tablet.
 
 ### Laporan, Notifikasi & Teknis
-- Laporan penjualan, servis, stok untuk admin/owner.
-- Notifikasi otomatis stok menipis & antrian servis (e-mail + database, command terjadwal).
+- Laporan penjualan, servis, stok, pembelian & hutang (aging per supplier); audit log aksi sensitif; import/export CSV.
+- Notifikasi in-app stok menipis & antrian servis (command terjadwal + notifikasi seketika saat servis siap diambil).
 - Backup database otomatis (SQLite/MySQL/PostgreSQL, retensi otomatis).
 - PWA (installable di HP/tablet), rate limiting halaman publik & unduhan PDF.
 

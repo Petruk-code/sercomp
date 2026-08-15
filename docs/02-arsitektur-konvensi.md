@@ -10,7 +10,7 @@ app/
 ├── Notifications/             # LowStockAlert, ServiceQueueAlert, ServiceReadyForPickupAlert (in-app, database saja)
 ├── Observers/                 # ServiceOrderObserver (rekam riwayat status)
 ├── Providers/                 # AppServiceProvider, FortifyServiceProvider
-├── Support/                   # InvoiceNumber (pembuat nomor PO/RTN/INV/SRV)
+├── Support/                   # InvoiceNumber (nomor PO/RTN/INV/SRV), CsvStream/CsvImporter (import-export CSV), WhatsApp, WhatsAppOtpService, AuditLogger/StockManager
 └── ...
 database/
 ├── factories/               # Factory model untuk testing
@@ -42,6 +42,7 @@ Rule lengkap & load-bearing ada di `.ai/rules/` (baca `index.md` dulu, lalu file
 - **Tema/brand**: identitas visual SerComp (Indigo/Violet) hanya lewat design token di `resources/css/app.css` (oklch). Komponen/pages harus memakai token (`bg-primary`, `bg-sidebar-primary`, dll), bukan warna hardcode, agar dark mode & rebranding tetap mudah.
 - **Role**: transaksi supplier & pembayaran → `admin,owner` saja; pelanggan boleh dikelola kasir; servis oleh semua peran; laporan hanya admin/owner (lihat `routes/web.php`).
 - **Nomor dokumen**: `InvoiceNumber::next()` di `app/Support/InvoiceNumber.php` (`INV`, `SRV`, `PO-YYYYMMDD-0001`, `RTN-YYYYMMDD-0001`).
+- **CSV import/export**: selalu lewat `app/Support/CsvStream.php` (export streaming, BOM UTF-8, anti formula-injection) & `CsvImporter.php` (import streaming). Header CSV dinormalisasi ke snake_case. Rute export/import harus dideklarasikan **sebelum** `Route::resource` saudaranya. Aturan: `.ai/rules/support-support.md`.
 
 ## Verifikasi Kualitas
 
@@ -56,7 +57,7 @@ php artisan test --compact   # Pest — unit & feature test
 
 Sekaligus: `composer run ci:check`.
 
-Setelah mengubah PHP: jalankan `vendor/bin/pint --format agent <file>` (projek bukan git repo, **jangan** `--dirty`).
+Setelah mengubah PHP: `vendor/bin/pint --format agent` (atau `vendor/bin/pint --dirty` — projek kini git repo, hanya file berubah).
 
 ## Catatan Teknis
 
