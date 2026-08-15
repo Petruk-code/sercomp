@@ -1,10 +1,10 @@
 # Rekomendasi Pengembangan SerComp
 
-> Status: **fitur inti selesai**, verifikasi kualitas hijau (Pest 189 / 188 lulus, PHPStan 0 error, Pint, ESLint, Prettier, `tsc`, `npm run build`). Dokumen ini = peta prioritas pengembangan berikutnya, dari yang paling mendesak ke yang opsional.
+> Status: **fitur inti selesai**, verifikasi kualitas hijau (Pest 206 / 205 lulus + 1 skip, PHPStan 0 error, Pint, ESLint, Prettier, `tsc`, `npm run build`). Dokumen ini = peta prioritas pengembangan berikutnya, dari yang paling mendesak ke yang opsional.
 
 ## 0. Prasyarat teknis yang disarankan sebelum semua itu
 
-- **Masuk ke version control.** Proyek **bukan git repo** — tidak ada safety net. Mulai `git init` + commit baseline + `.gitignore` (`vendor/`, `node_modules/`, `.env`, `storage/logs/*`, `public/build/`) sebelum menyentuh fitur besar. Ini pencegahan paling berdampak.
+- ~~**Masuk ke version control.** Proyek **bukan git repo** — tidak ada safety net. Mulai `git init` + commit baseline + `.gitignore` (`vendor/`, `node_modules/`, `.env`, `storage/logs/*`, `public/build/`) sebelum menyentuh fitur besar. Ini pencegahan paling berdampak.~~ — **SELESAI (2026-08-15)**: `git init` + baseline commit; `.gitignore` diperkuat (`database/*.sqlite*`, `storage/app/backups`, `public/sw.js`, `public/workbox-*.js`, `tsconfig.tsbuildinfo`). Wayfinder actions/routes (`resources/js/{actions,routes,wayfinder}`) sengaja di-ignore — regenerasi via `php artisan wayfinder:generate --with-form`.
 - **Jangan migrasi `migrate:fresh` di data riil** — kalau sudah ada data produksi, pakai `php artisan migrate --force`.
 
 ## 1. Prioritas tinggi — jangka pendek
@@ -23,7 +23,7 @@ Belum pernah live. Urutan eksekusi lengkap ada di `docs/03-operasional.md` & `do
 - ~~**Pisahkan "dibaca di popover" vs "dibaca saat navigasi"**~~ — membuka popover TIDAK menandai dibaca; hanya klik item / "Tandai semua" yang mengecilkan badge, notifikasi lama tetap tampil di daftar.
 
 ### 1.3 Audit log aksi sensitif
-Sudah lama ada di roadmap. Catat siapa mengubah apa pada: pembayaran, retur, ubah status servis, ubah stok, login 2FA. Minimal: tabel `audit_logs` + middleware/event `Observer` di model finansial. Pintu masuk wajib sebelum "percaya" pada produksi.
+Sudah lama ada di roadmap. Catat siapa mengubah apa pada: pembayaran, retur, ubah status servis, ubah stok, login 2FA. Minimal: tabel `audit_logs` + middleware/event `Observer` di model finansial. Pintu masuk wajib sebelum "percaya" pada produksi. — **SELESAI (2026-08-15)**: tabel + model `AuditLog`, helper `AuditLogger`/`StockManager`, event di sale/purchase/retur/servis/stok/2FA, halaman `/audit-logs` (filter + diff), `AuditLogTest` (9 test). Aturan terkait di `.ai/rules/controllers.md` & `.ai/rules/support.md`.
 
 ### 1.4 Import/export data master & laporan (Excel/CSV)
 Produk, pelanggan, supplier, laporan penjualan/servis/hutang. Pakai `maatwebsite/excel` atau streaming CSV native (hindari beban memori di data besar).
@@ -55,9 +55,9 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 
 ## 5. Rekomendasi urutan kerja
 
-1. Git init + baseline commit (0.5–1 hari).
+1. ~~Git init + baseline commit (0.5–1 hari).~~ — **SELESAI (2026-08-15)**.
 2. Deploy produksi per checklist (1–2 hari + verifikasi).
-3. Audit log aksi sensitif (1–2 hari).
+3. ~~Audit log aksi sensitif (1–2 hari).~~ — **SELESAI (2026-08-15)**.
 4. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
 5. Import/export CSV/Excel (1–2 hari).
 6. E2E Playwright smoke (1–2 hari).
