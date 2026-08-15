@@ -1,13 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Download, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import CustomerController from '@/actions/App/Http/Controllers/Master/CustomerController';
 import { DeleteButton } from '@/components/delete-button';
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { create, index } from '@/routes/master/customers';
+import {
+    create,
+    exportMethod,
+    importMethod,
+    index,
+} from '@/routes/master/customers';
 import type { Customer, PaginatedData } from '@/types';
 
 type Props = {
@@ -31,6 +37,19 @@ export default function CustomersIndex({ customers, filters }: Props) {
             <Head title="Pelanggan" />
 
             <PageHeader title="Pelanggan" description="Kelola data pelanggan.">
+                <Button variant="outline" asChild>
+                    <a
+                        href={
+                            exportMethod({
+                                query: { search: search || undefined },
+                            }).url
+                        }
+                    >
+                        <Download />
+                        Export CSV
+                    </a>
+                </Button>
+                <ImportCsvDialog action={importMethod().url} />
                 <Button asChild>
                     <Link href={create().url}>
                         <Plus />

@@ -7,10 +7,14 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\ServiceOrder;
+use App\Support\CsvImporter;
+use App\Support\CsvStream;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
@@ -110,5 +114,96 @@ class CustomerController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pelanggan berhasil dihapus.')]);
 
         return back();
+    }
+
+    /**
+     * Export the filtered customers as a CSV download.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $customers = Customer::query()
+            ->when($request->search, fn ($query, $search) => $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            }))
+            ->orderByDesc('id')
+            ->get();
+
+        return CsvStream::export('pelanggan.csv', [
+            'Nama', 'Telepon', 'Email', 'Alamat', 'Catatan',
+        ], $customers->map(fn (Customer $customer): array => [
+            $customer->name,
+            $customer->phone,
+            $customer->email,
+            $customer->address,
+            $customer->notes,
+        ]));
+    }
+
+    /**
+     * Import customers from an uploaded CSV, upserting by phone, then email,
+     * then name.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $result = CsvImporter::run(
+            $request->file('file')->getRealPath(),
+            Customer::class,
+            fn (array $row, int $rowNumber): array => $this->normalizeCustomerRow($row, $rowNumber),
+            fn (array $data): ?Customer => $this->findCustomerForImport($data),
+        );
+
+        Inertia::flash('toast', [
+            'type' => $result['failed'] > 0 ? 'warning' : 'success',
+            'message' => CsvImporter::summaryMessage($result),
+        ]);
+
+        return back();
+    }
+
+    /**
+     * Normalise and validate a single customer import row.
+     *
+     * @param  array<string, string|null>  $row
+     * @return array<string, mixed>
+     */
+    private function normalizeCustomerRow(array $row, int $rowNumber): array
+    {
+        $name = trim((string) ($row['nama'] ?? $row['name'] ?? ''));
+
+        if ($name === '') {
+            throw new InvalidArgumentException('Nama pelanggan wajib diisi.');
+        }
+
+        return [
+            'name' => $name,
+            'phone' => CsvImporter::nullableCell($row['telepon'] ?? $row['phone'] ?? null),
+            'email' => CsvImporter::nullableCell($row['email'] ?? null),
+            'address' => CsvImporter::nullableCell($row['alamat'] ?? $row['address'] ?? null),
+            'notes' => CsvImporter::nullableCell($row['catatan'] ?? $row['notes'] ?? null),
+        ];
+    }
+
+    /**
+     * Locate an existing customer by phone, then email, then name.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function findCustomerForImport(array $data): ?Customer
+    {
+        if ($data['phone'] !== null) {
+            return Customer::query()->where('phone', $data['phone'])->first();
+        }
+
+        if ($data['email'] !== null) {
+            return Customer::query()->where('email', $data['email'])->first();
+        }
+
+        return Customer::query()->where('name', $data['name'])->first();
     }
 }

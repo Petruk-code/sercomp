@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { sales as salesRoute } from '@/routes/reports';
+import { exportMethod as exportSales } from '@/routes/reports/sales';
 import type { PaginatedData, Sale } from '@/types';
 
 type Props = {
@@ -39,7 +41,23 @@ export default function SalesReport({ sales, summary, filters }: Props) {
             <PageHeader
                 title="Laporan Penjualan"
                 description="Rekapitulasi pendapatan penjualan retail dan servis."
-            />
+            >
+                <Button variant="outline" asChild>
+                    <a
+                        href={
+                            exportSales({
+                                query: {
+                                    date_from: dateFrom,
+                                    date_to: dateTo,
+                                },
+                            }).url
+                        }
+                    >
+                        <Download />
+                        Export CSV
+                    </a>
+                </Button>
+            </PageHeader>
 
             <div className="mb-4 flex flex-wrap items-end gap-2">
                 <div className="grid gap-1">

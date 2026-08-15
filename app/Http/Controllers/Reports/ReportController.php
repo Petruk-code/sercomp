@@ -8,11 +8,13 @@ use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\Supplier;
+use App\Support\CsvStream;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
@@ -196,73 +198,19 @@ class ReportController extends Controller
      */
     public function debts(Request $request): Response
     {
-        $today = now()->startOfDay();
-
         $supplierId = $request->filled('supplier_id')
             ? (int) $request->integer('supplier_id')
             : null;
 
-        $openPurchases = Purchase::query()
-            ->where('payment_status', '!=', 'paid')
-            ->with('supplier:id,name')
-            ->when($supplierId !== null, fn ($query) => $query->where('supplier_id', $supplierId))
-            ->get(['id', 'supplier_id', 'total', 'paid_amount', 'due_date', 'purchase_date']);
-
-        $rows = $openPurchases
-            ->groupBy('supplier_id')
-            ->map(function ($group) use ($today): array {
-                $supplier = $group->first()?->supplier;
-
-                $buckets = [
-                    'current' => 0.0,
-                    'overdue_0_30' => 0.0,
-                    'overdue_31_60' => 0.0,
-                    'overdue_60' => 0.0,
-                ];
-
-                foreach ($group as $purchase) {
-                    $balance = $purchase->balanceDue();
-
-                    if ($balance <= 0) {
-                        continue;
-                    }
-
-                    $dueDate = $purchase->due_date?->startOfDay();
-
-                    if ($dueDate === null || $dueDate->gte($today)) {
-                        $buckets['current'] += $balance;
-
-                        continue;
-                    }
-
-                    $daysOverdue = (int) $dueDate->diffInDays($today);
-
-                    if ($daysOverdue <= 30) {
-                        $buckets['overdue_0_30'] += $balance;
-                    } elseif ($daysOverdue <= 60) {
-                        $buckets['overdue_31_60'] += $balance;
-                    } else {
-                        $buckets['overdue_60'] += $balance;
-                    }
-                }
-
-                return [
-                    'id' => $supplier?->id,
-                    'name' => $supplier->name ?? 'Supplier tidak dikenal',
-                    'open_count' => $group->count(),
-                    ...$buckets,
-                    'outstanding' => round(array_sum($buckets), 2),
-                ];
-            })
-            ->sortByDesc('outstanding')
-            ->values();
+        $rows = $this->debtRows($supplierId);
 
         $summary = [
-            'outstanding' => round((float) $rows->sum('outstanding'), 2),
-            'overdue' => round((float) $rows->sum(
+            'outstanding' => round((float) array_sum(array_column($rows, 'outstanding')), 2),
+            'overdue' => round((float) array_sum(array_map(
                 fn (array $row): float => $row['overdue_0_30'] + $row['overdue_31_60'] + $row['overdue_60'],
-            ), 2),
-            'suppliers' => $rows->count(),
+                $rows,
+            )), 2),
+            'suppliers' => count($rows),
         ];
 
         $suppliers = Supplier::query()->orderBy('name')->get(['id', 'name']);
@@ -275,5 +223,153 @@ class ReportController extends Controller
                 'supplier_id' => $supplierId,
             ],
         ]);
+    }
+
+    /**
+     * Build the per-supplier debt aging rows, sorted by outstanding descending.
+     *
+     * @return list<array{id: int|null, name: string, open_count: int, current: float, overdue_0_30: float, overdue_31_60: float, overdue_60: float, outstanding: float}>
+     */
+    private function debtRows(?int $supplierId): array
+    {
+        $today = now()->startOfDay();
+
+        $openPurchases = Purchase::query()
+            ->where('payment_status', '!=', 'paid')
+            ->with('supplier:id,name')
+            ->when($supplierId !== null, fn ($query) => $query->where('supplier_id', $supplierId))
+            ->get(['id', 'supplier_id', 'total', 'paid_amount', 'due_date', 'purchase_date']);
+
+        $rows = [];
+
+        foreach ($openPurchases->groupBy('supplier_id') as $group) {
+            $supplier = $group->first()?->supplier;
+
+            $buckets = [
+                'current' => 0.0,
+                'overdue_0_30' => 0.0,
+                'overdue_31_60' => 0.0,
+                'overdue_60' => 0.0,
+            ];
+
+            foreach ($group as $purchase) {
+                $balance = $purchase->balanceDue();
+
+                if ($balance <= 0) {
+                    continue;
+                }
+
+                $dueDate = $purchase->due_date?->startOfDay();
+
+                if ($dueDate === null || $dueDate->gte($today)) {
+                    $buckets['current'] += $balance;
+
+                    continue;
+                }
+
+                $daysOverdue = (int) $dueDate->diffInDays($today);
+
+                if ($daysOverdue <= 30) {
+                    $buckets['overdue_0_30'] += $balance;
+                } elseif ($daysOverdue <= 60) {
+                    $buckets['overdue_31_60'] += $balance;
+                } else {
+                    $buckets['overdue_60'] += $balance;
+                }
+            }
+
+            $rows[] = [
+                'id' => $supplier?->id,
+                'name' => $supplier->name ?? 'Supplier tidak dikenal',
+                'open_count' => $group->count(),
+                ...$buckets,
+                'outstanding' => round(array_sum($buckets), 2),
+            ];
+        }
+
+        usort($rows, static fn (array $a, array $b): int => $b['outstanding'] <=> $a['outstanding']);
+
+        return $rows;
+    }
+
+    /**
+     * Export the sales report within the given date range as CSV.
+     */
+    public function exportSales(Request $request): StreamedResponse
+    {
+        [$dateFrom, $dateTo] = $this->dateRange($request);
+
+        $sales = Sale::query()
+            ->with(['customer:id,name'])
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return CsvStream::export('laporan-penjualan.csv', [
+            'Tanggal', 'No. Transaksi', 'Pelanggan', 'Tipe', 'Subtotal', 'Diskon', 'Total', 'Dibayar', 'Sisa', 'Status Pembayaran',
+        ], $sales->map(fn (Sale $sale): array => [
+            $sale->created_at->format('d-m-Y H:i'),
+            $sale->invoice_number,
+            $sale->customer?->name,
+            $sale->type === 'service' ? 'Servis' : 'Retail',
+            $sale->subtotal,
+            $sale->discount,
+            $sale->total,
+            $sale->paid_amount,
+            max((float) $sale->total - (float) $sale->paid_amount, 0),
+            Sale::PAYMENT_STATUS_LABELS[$sale->payment_status] ?? $sale->payment_status,
+        ]));
+    }
+
+    /**
+     * Export the service report within the given date range as CSV.
+     */
+    public function exportServices(Request $request): StreamedResponse
+    {
+        [$dateFrom, $dateTo] = $this->dateRange($request);
+
+        $orders = ServiceOrder::query()
+            ->with(['customer:id,name', 'technician:id,name', 'sale:id,payment_status'])
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return CsvStream::export('laporan-servis.csv', [
+            'Tanggal', 'No. Servis', 'Pelanggan', 'Teknisi', 'Status', 'Biaya Total', 'Status Pembayaran',
+        ], $orders->map(fn (ServiceOrder $order): array => [
+            $order->created_at->format('d-m-Y H:i'),
+            $order->invoice_number,
+            $order->customer?->name,
+            $order->technician?->name,
+            $order->statusLabel(),
+            $order->total_cost,
+            $order->sale !== null
+                ? (Sale::PAYMENT_STATUS_LABELS[$order->sale->payment_status] ?? $order->sale->payment_status)
+                : 'Belum Checkout',
+        ]));
+    }
+
+    /**
+     * Export the debt aging report as CSV.
+     */
+    public function exportDebts(Request $request): StreamedResponse
+    {
+        $supplierId = $request->filled('supplier_id')
+            ? (int) $request->integer('supplier_id')
+            : null;
+
+        $rows = $this->debtRows($supplierId);
+
+        return CsvStream::export('laporan-hutang.csv', [
+            'Supplier', 'Jumlah PO Terbuka', 'Lancar', 'Lewat 0-30 Hari', 'Lewat 31-60 Hari', 'Lewat 60+ Hari', 'Total Hutang',
+        ], array_map(static fn (array $row): array => [
+            $row['name'],
+            $row['open_count'],
+            $row['current'],
+            $row['overdue_0_30'],
+            $row['overdue_31_60'],
+            $row['overdue_60'],
+            $row['outstanding'],
+        ], $rows));
     }
 }

@@ -71,10 +71,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('categories', CategoryController::class)->parameters(['categories' => 'category'])->names('master.categories');
 
         Route::get('products/barcode', [ProductController::class, 'barcode'])->name('master.products.barcode');
+        Route::get('products/export', [ProductController::class, 'export'])->name('master.products.export');
+        Route::post('products/import', [ProductController::class, 'import'])->name('master.products.import');
         Route::resource('products', ProductController::class)->parameters(['products' => 'product'])->names('master.products');
 
         Route::resource('catalog/services', ServiceCatalogController::class)->parameters(['services' => 'service'])->names('master.services');
 
+        Route::get('suppliers/export', [SupplierController::class, 'export'])->name('master.suppliers.export');
+        Route::post('suppliers/import', [SupplierController::class, 'import'])->name('master.suppliers.import');
         Route::resource('suppliers', SupplierController::class)->parameters(['suppliers' => 'supplier'])->names('master.suppliers');
 
         // Pembelian dari supplier (PO + tempo/cicilan)
@@ -101,6 +105,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Master data — pelanggan (kasir boleh mengelola)
     Route::middleware('role:admin,owner,cashier')->group(function () {
+        Route::get('customers/export', [CustomerController::class, 'export'])->name('master.customers.export');
+        Route::post('customers/import', [CustomerController::class, 'import'])->name('master.customers.import');
         Route::resource('customers', CustomerController::class)->parameters(['customers' => 'customer'])->names('master.customers');
     });
 
@@ -128,10 +134,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Laporan
     Route::middleware('role:admin,owner')->group(function () {
         Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+        Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
         Route::get('reports/services', [ReportController::class, 'services'])->name('reports.services');
+        Route::get('reports/services/export', [ReportController::class, 'exportServices'])->name('reports.services.export');
         Route::get('reports/stock', [ReportController::class, 'stock'])->name('reports.stock');
         Route::get('reports/purchases', [ReportController::class, 'purchases'])->name('reports.purchases');
         Route::get('reports/debts', [ReportController::class, 'debts'])->name('reports.debts');
+        Route::get('reports/debts/export', [ReportController::class, 'exportDebts'])->name('reports.debts.export');
     });
 
     // Audit log aksi sensitif — khusus admin/owner

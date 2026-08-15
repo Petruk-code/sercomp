@@ -1,13 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Download, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import SupplierController from '@/actions/App/Http/Controllers/Master/SupplierController';
 import { DeleteButton } from '@/components/delete-button';
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { create, index } from '@/routes/master/suppliers';
+import {
+    create,
+    exportMethod,
+    importMethod,
+    index,
+} from '@/routes/master/suppliers';
 import type { PaginatedData, Supplier } from '@/types';
 
 type Props = {
@@ -31,6 +37,19 @@ export default function SuppliersIndex({ suppliers, filters }: Props) {
             <Head title="Supplier" />
 
             <PageHeader title="Supplier" description="Kelola data supplier.">
+                <Button variant="outline" asChild>
+                    <a
+                        href={
+                            exportMethod({
+                                query: { search: search || undefined },
+                            }).url
+                        }
+                    >
+                        <Download />
+                        Export CSV
+                    </a>
+                </Button>
+                <ImportCsvDialog action={importMethod().url} />
                 <Button asChild>
                     <Link href={create().url}>
                         <Plus />

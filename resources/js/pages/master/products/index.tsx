@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Printer, Search } from 'lucide-react';
+import { Download, Plus, Printer, Search } from 'lucide-react';
 import { useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Master/ProductController';
 import { DeleteButton } from '@/components/delete-button';
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { PageHeader } from '@/components/page-header';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,13 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';
-import { barcode, create, index } from '@/routes/master/products';
+import {
+    barcode,
+    create,
+    exportMethod,
+    importMethod,
+    index,
+} from '@/routes/master/products';
 import type { PaginatedData, Product } from '@/types';
 
 type Props = {
@@ -68,6 +75,14 @@ export default function ProductsIndex({
         );
     }
 
+    const exportUrl = exportMethod({
+        query: {
+            search: search || undefined,
+            category_id: categoryId === 'all' ? undefined : categoryId,
+            low_stock: lowStock ? 1 : undefined,
+        },
+    }).url;
+
     return (
         <>
             <Head title="Produk" />
@@ -87,6 +102,13 @@ export default function ProductsIndex({
                         </Link>
                     </Button>
                 )}
+                <Button variant="outline" asChild>
+                    <a href={exportUrl}>
+                        <Download />
+                        Export CSV
+                    </a>
+                </Button>
+                <ImportCsvDialog action={importMethod().url} />
                 <Button asChild>
                     <Link href={create().url}>
                         <Plus />

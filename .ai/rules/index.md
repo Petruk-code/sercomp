@@ -21,5 +21,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Controllers/Service/** | .ai/rules/service.md |
 | app/Http/Controllers/Settings/*.php | .ai/rules/settings.md |
 | app/Http/Controllers/Supplier/** | .ai/rules/supplier.md |
+| app/Support/CsvStream.php,app/Support/CsvImporter.php | .ai/rules/support-support.md |
 | app/Support/InvoiceNumber.php, app/Support/** | .ai/rules/support.md |
 | resources/views/app.blade.php | .ai/rules/views.md |

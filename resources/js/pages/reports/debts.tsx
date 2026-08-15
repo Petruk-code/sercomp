@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import { debts as debtsRoute } from '@/routes/reports';
+import { exportMethod as exportDebts } from '@/routes/reports/debts';
 import type { Supplier } from '@/types';
 
 type DebtRow = {
@@ -56,7 +58,25 @@ export default function DebtsReport({
             <PageHeader
                 title="Mutasi Hutang Supplier"
                 description="Sisa hutang per supplier dikelompokkan menurut umur jatuh tempo."
-            />
+            >
+                <Button variant="outline" asChild>
+                    <a
+                        href={
+                            exportDebts({
+                                query: {
+                                    supplier_id:
+                                        supplierId === 'all'
+                                            ? undefined
+                                            : Number(supplierId),
+                                },
+                            }).url
+                        }
+                    >
+                        <Download />
+                        Export CSV
+                    </a>
+                </Button>
+            </PageHeader>
 
             <div className="mb-4 flex flex-wrap items-end gap-2">
                 <select
