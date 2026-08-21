@@ -25,11 +25,9 @@ import {
     readQueue,
     retrySale,
     saveCartDraft,
-    syncPendingSales
-    
-    
+    syncPendingSales,
 } from '@/lib/offline-sales';
-import type {QueuedSale, QueuedSaleItem} from '@/lib/offline-sales';
+import type { QueuedSale, QueuedSaleItem } from '@/lib/offline-sales';
 import { formatCurrency } from '@/lib/utils';
 import { index } from '@/routes/sales';
 import type { Customer, Product } from '@/types';
@@ -126,7 +124,9 @@ export default function Pos({
         if (result) {
             router.reload({ only: ['products'] });
         } else if (!navigator.onLine) {
-            toast.info('Masih offline — antrean akan dikirim saat koneksi kembali.');
+            toast.info(
+                'Masih offline — antrean akan dikirim saat koneksi kembali.',
+            );
         }
     }, [refreshQueue, syncing]);
 

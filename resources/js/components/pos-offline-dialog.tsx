@@ -1,4 +1,10 @@
-import { CheckCircle2, CloudOff, RotateCcw, Trash2, XCircle } from 'lucide-react';
+import {
+    CheckCircle2,
+    CloudOff,
+    RotateCcw,
+    Trash2,
+    XCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -39,7 +45,9 @@ export function PosOfflineDialog({
     onRetry,
     onDiscard,
 }: Props) {
-    const pendingCount = items.filter((item) => item.status === 'pending').length;
+    const pendingCount = items.filter(
+        (item) => item.status === 'pending',
+    ).length;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,9 +55,9 @@ export function PosOfflineDialog({
                 <DialogHeader>
                     <DialogTitle>Antrean Transaksi Offline</DialogTitle>
                     <DialogDescription>
-                        Transaksi tersimpan di perangkat ini dan dikirim otomatis
-                        saat koneksi kembali. Pastikan data sudah benar sebelum
-                        dibuang.
+                        Transaksi tersimpan di perangkat ini dan dikirim
+                        otomatis saat koneksi kembali. Pastikan data sudah benar
+                        sebelum dibuang.
                     </DialogDescription>
                 </DialogHeader>
 

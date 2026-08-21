@@ -83,7 +83,10 @@ export function createReference(): string {
     return `pos-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function enqueueSale(payload: QueuedSalePayload, total: number): QueuedSale {
+export function enqueueSale(
+    payload: QueuedSalePayload,
+    total: number,
+): QueuedSale {
     const sale: QueuedSale = {
         reference: payload.client_reference,
         payload,
