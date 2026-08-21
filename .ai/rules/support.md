@@ -14,3 +14,6 @@ The OTP model is App\Models\WhatsappOtp (lowercase 'app'). PHP class names are c
 
 ## StockManager suppresses Product events; audit keys live in AuditLog::ACTION_LABELS
 StockManager::increment/decrement wraps the change in Product::withoutEvents() so ProductObserver::updated does NOT also record product.stock_changed (double audit rows). ProductObserver still logs manual stock edits made outside StockManager. Every sensitive-action audit key (sale.payment, purchase_return.deleted, whatsapp_2fa.enabled, etc.) must be added to AuditLog::ACTION_LABELS or the UI shows the raw key.
+
+## Runtime 500 "table doesn't exist" = jalankan migrate dulu
+AuditLogger menulis ke tabel audit_logs dari banyak controller/observer. Test suite lolos walau migrasi lokal pending karena RefreshDatabase hanya berlaku di DB testing. Jika muncul SQLSTATE[42S02] saat akses route di lokal, cek `php artisan migrate:status` dan jalankan `php artisan migrate` sebelum debugging kode.
