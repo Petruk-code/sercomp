@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { Printer } from 'lucide-react';
+import { useState } from 'react';
 import { PaymentStatusBadge } from '@/components/status-badge';
+import { ThermalPrintDialog } from '@/components/thermal-print-dialog';
 import { Button } from '@/components/ui/button';
+import { buildSaleReceipt } from '@/lib/thermal-receipt';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { index, print } from '@/routes/sales';
 import type { Sale } from '@/types';
@@ -17,6 +20,8 @@ export default function SaleShow({
     paymentMethodLabels,
     paymentStatusLabels,
 }: Props) {
+    const [thermalOpen, setThermalOpen] = useState(false);
+
     return (
         <>
             <Head title={sale.invoice_number} />
@@ -41,6 +46,14 @@ export default function SaleShow({
                             </Link>
                         </Button>
                     )}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setThermalOpen(true)}
+                    >
+                        <Printer />
+                        Cetak Thermal
+                    </Button>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={print.url(sale.id)} target="_blank">
                             <Printer />
@@ -49,6 +62,18 @@ export default function SaleShow({
                     </Button>
                 </div>
             </div>
+
+            <ThermalPrintDialog
+                open={thermalOpen}
+                onOpenChange={setThermalOpen}
+                buildReceipt={(paperWidth) =>
+                    buildSaleReceipt(
+                        sale,
+                        { paymentMethodLabels, paymentStatusLabels },
+                        paperWidth,
+                    )
+                }
+            />
 
             <div className="mt-6 grid gap-6 lg:grid-cols-3">
                 <div className="rounded-xl border lg:col-span-2">

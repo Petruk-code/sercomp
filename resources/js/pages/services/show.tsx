@@ -16,9 +16,11 @@ import {
     ServiceStatusBadge,
     WarrantyBadge,
 } from '@/components/status-badge';
+import { ThermalPrintDialog } from '@/components/thermal-print-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { buildServiceReceipt } from '@/lib/thermal-receipt';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { print as printRoute } from '@/routes/sales';
 import { index } from '@/routes/services';
@@ -56,6 +58,7 @@ export default function ServiceOrderShow({
 
     const [laborCost, setLaborCost] = useState(Number(order.labor_cost));
     const [discount, setDiscount] = useState(0);
+    const [thermalOpen, setThermalOpen] = useState(false);
 
     const checkoutTotal = Math.max(laborCost + itemsTotal - discount, 0);
 
@@ -120,6 +123,14 @@ export default function ServiceOrderShow({
                             <Download />
                             Kartu Lacak (PDF)
                         </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setThermalOpen(true)}
+                    >
+                        <Printer />
+                        Cetak Thermal
                     </Button>
                     <Button variant="outline" size="sm" asChild>
                         <Link
@@ -850,6 +861,21 @@ export default function ServiceOrderShow({
                             </div>
                         </div>
                     )}
+
+                    <ThermalPrintDialog
+                        open={thermalOpen}
+                        onOpenChange={setThermalOpen}
+                        buildReceipt={(paperWidth) =>
+                            buildServiceReceipt(
+                                order,
+                                {
+                                    statusLabels,
+                                    trackingUrl: `${window.location.origin}/tracking?no=${order.invoice_number}`,
+                                },
+                                paperWidth,
+                            )
+                        }
+                    />
                 </div>
             </div>
         </>

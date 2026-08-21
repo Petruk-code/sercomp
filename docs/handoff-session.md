@@ -14,6 +14,7 @@ Verifikasi terkini (2026-08-21): **230 test Pest (229 lulus + 1 skipped PwaTest 
 
 | Rekomendasi | Status | Inti |
 | --- | --- | --- |
+| 2.3 Cetak struk thermal/Bluetooth | ✅ SELESAI (2026-08-21) | Encoder ESC/POS murni TS (`lib/escpos.ts`: align/bold/size/columns/cut, lebar 58mm=32 / 80mm=48 kolom); builder struk nota & tanda terima (`lib/thermal-receipt.ts`); transport Web Bluetooth (service 18F0) & Web Serial 9600 8N1 dengan auto-reconnect perangkat terizin (`lib/thermal-printer.ts`); dialog pilih lebar kertas + preferensi localStorage; tombol "Cetak Thermal" di `sales/show` & `services/show`. Fallback PDF A5 tetap ada. Test: `ThermalPrintTest` (2 browser). |
 | 2.2 PWA offline / antrean sinkronisasi POS | ✅ SELESAI (2026-08-21) | Idempotensi `sales.client_reference` unik (+ header `X-Offline-Sync` → JSON); antrean & draf keranjang localStorage (`lib/offline-sales.ts`); checkout offline-aware (`onNetworkError` → enqueue, auto-sync saat mount/event `online`); dialog antrean retry/buang; badge Offline. Test: `PosOfflineSyncTest` (4) + `PosOfflineQueueTest` (3 browser). Trap infrastruktur: tiap `visit()` = context baru → login lanjut dari page instance sama (`.ai/rules/browser.md`). |
 | 2.1 E2E/browser testing (Playwright) | ✅ SELESAI (2026-08-21) | `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik (+ not-found). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi → `.ai/rules/browser.md`. |
 | 1.4 Import/export CSV | ✅ SELESAI | Streaming CSV native: `app/Support/CsvStream.php` (export, BOM UTF-8, anti formula-injection) + `CsvImporter.php` (import streaming). Export master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via `ImportCsvDialog`. `ImportExportTest` (9 test). Aturan: `.ai/rules/support-support.md`. |
@@ -40,8 +41,8 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 | 1.4 | Import/export CSV master & laporan | ✅ Selesai |
 | 2.1 | E2E / browser testing (Playwright) | ✅ Selesai |
 | 2.2 | PWA offline / antrean sinkronisasi POS | ✅ Selesai |
-| 2.3 | Cetak struk thermal/Bluetooth | 🔜 **Berikutnya** |
-| — | Realtime (Reverb), push web, multi-cabang, ringkasan otomatis | ⬜ Ide lanjutan |
+| 2.3 | Cetak struk thermal/Bluetooth | ✅ Selesai |
+| — | Realtime (Reverb), push web, multi-cabang, ringkasan otomatis | 🔜 **Berikutnya** |
 | 1.1 | **Deploy ke produksi** | ⏳ **PALING AKHIR** — hanya setelah semua modul selesai & verifikasi bebas error |
 
 ### A. PWA offline / antrean sinkronisasi POS (2.2) — ✅ SELESAI
@@ -51,16 +52,14 @@ Implementasi yang sudah jalan:
 - **Test browser**: `tests/Browser/PosOfflineQueueTest.php` (auto-sync sukses, gagal stok → status failed, restore draf keranjang).
 - Catatan infrastruktur test: setiap `visit()` = context browser baru; login harus dilanjutkan dari page instance yang sama (lihat `.ai/rules/browser.md`).
 
-### B. Cetak struk thermal/Bluetooth (2.3) — BERIKUTNYA → realtime (Reverb), push web, multi-cabang, ringkasan otomatis
-Poin desain:
-- Cetak langsung dari browser ke printer thermal via **Web Bluetooth / Web Serial** (protokol ESC/POS, lebar 58/80mm); fallback: dialog print browser dengan layout struk khusus cetak.
-- Sumber struk: nota penjualan retail (`sales.show`) & tanda terima servis (`services.show`) — data sudah ada, tinggal formatter.
-- Simpan perangkat printer terakhir di localStorage agar tidak pairing ulang tiap cetak.
-- Riset kompatibilitas perangkat dulu (tidak semua printer thermal punya Bluetooth LE); iterasi terpisah dari fallback print.
-
-Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
-
-> Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).
+### B. Cetak struk thermal/Bluetooth (2.3) — ✅ SELESAI
+Implementasi yang sudah jalan (frontend murni, tanpa backend baru):
+- **Encoder ESC/POS**: `resources/js/lib/escpos.ts` — `EscposBuilder` (init/align/bold/size/text/feed/cut/columns/separator/raw), lebar kertas 58mm = 32 kolom, 80mm = 48 kolom; teks non-Latin-1 → `?`; payload dipotong chunk 180 byte.
+- **Builder struk**: `resources/js/lib/thermal-receipt.ts` — `buildSaleReceipt()` (nota penjualan: item qty×harga, subtotal/diskon/total bold besar, bayar/kembalian) & `buildServiceReceipt()` (tanda terima servis: unit/keluhan/kondisi/estimasi biaya + URL lacak `/tracking?no=…`), word-wrap otomatis selebar kertas.
+- **Transport**: `resources/js/lib/thermal-printer.ts` — Web Bluetooth (service ESC/POS BLE `18F0`, characteristic write/writeWithoutResponse, delay antar-chunk 20ms) & Web Serial (9600 8N1); keduanya coba pakai perangkat/port yang sudah diberi izin (`getDevices()`/`getPorts()`) sebelum minta pairing baru; preferensi lebar & transport terakhir di localStorage (`sercomp.thermal.*`).
+- **UI**: `resources/js/components/thermal-print-dialog.tsx` (pilih 58/80mm via ToggleGroup, tombol Bluetooth/Kabel dengan status disabled bila tak didukung + pesan error); tombol "Cetak Thermal" di `sales/show.tsx` & `services/show.tsx`; fallback PDF A5 Dompdf tetap tersedia.
+- **Test**: `tests/Browser/ThermalPrintTest.php` — dialog terbuka dari kedua halaman + lebar kertas tersimpan ke localStorage. Catatan: headless Chrome punya `navigator.bluetooth`/`serial`, jadi jangan assert teks "tidak mendukung".
+- Verifikasi hardware nyata (pairing printer fisik) belum dilakukan — butuh printer thermal ESC/POS asli; protokol mengikuti standar industri (service 18F0).
 
 ### C. Deploy ke domain produksi — PALING AKHIR
 Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh verifikasi hijau tanpa error**. Urutan eksekusi final saat saatnya tiba (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
@@ -88,7 +87,7 @@ Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh 
 ## 5. Verifikasi kualitas
 
 ```bash
-php artisan test --compact            # seluruh test (sesi terakhir: 223 total = 222 lulus + 1 skip)
+php artisan test --compact            # seluruh test (sesi terakhir: 232 total = 231 lulus + 1 skip)
 ./vendor/bin/pest tests/Browser       # hanya test browser Playwright
 vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 vendor/bin/pint --dirty --format agent

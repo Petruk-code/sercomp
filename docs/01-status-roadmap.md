@@ -72,7 +72,7 @@ Prioritas tinggi:
 
 Ide berikutnya (belum diprioritaskan):
 
-- [ ] Cetak struk langsung dari tablet ke printer thermal/Bluetooth
+- [x] Cetak struk langsung dari tablet ke printer thermal/Bluetooth
 - [ ] Push notification web untuk notifikasi servis/stok di HP yang ter-install
 - [ ] Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)
 - [ ] Ringkasan laporan otomatis mingguan/bulanan via email
