@@ -2,11 +2,12 @@
 
 namespace App\Notifications;
 
+use App\Contracts\HasDatabasePayload;
 use App\Models\ServiceOrder;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
-class ServiceQueueAlert extends Notification
+class ServiceQueueAlert extends Notification implements HasDatabasePayload
 {
     /**
      * @param  Collection<int, ServiceOrder>  $services

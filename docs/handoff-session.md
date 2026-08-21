@@ -14,6 +14,7 @@ Verifikasi terkini (2026-08-21): **230 test Pest (229 lulus + 1 skipped PwaTest 
 
 | Rekomendasi | Status | Inti |
 | --- | --- | --- |
+| 2.4 Realtime notifikasi (Reverb) | ✅ SELESAI (2026-08-21) | Laravel Reverb + Echo (`@laravel/echo-react`); listener sinkron `PushDatabaseNotificationToRealtime` push event `NotificationPushed` (ShouldBroadcastNow, tanpa queue worker) ke channel privat `App.Models.User.{id}` untuk tiap notifikasi database; `NotificationsProvider` realtime-first — polling 30 dtk hanya fallback saat socket putus/tak terkonfigurasi. Test: `RealtimeNotificationTest` (3). Port server **8081** (`REVERB_SERVER_PORT`, 8080 dipakai Apache lokal). |
 | 2.3 Cetak struk thermal/Bluetooth | ✅ SELESAI (2026-08-21) | Encoder ESC/POS murni TS (`lib/escpos.ts`: align/bold/size/columns/cut, lebar 58mm=32 / 80mm=48 kolom); builder struk nota & tanda terima (`lib/thermal-receipt.ts`); transport Web Bluetooth (service 18F0) & Web Serial 9600 8N1 dengan auto-reconnect perangkat terizin (`lib/thermal-printer.ts`); dialog pilih lebar kertas + preferensi localStorage; tombol "Cetak Thermal" di `sales/show` & `services/show`. Fallback PDF A5 tetap ada. Test: `ThermalPrintTest` (2 browser). |
 | 2.2 PWA offline / antrean sinkronisasi POS | ✅ SELESAI (2026-08-21) | Idempotensi `sales.client_reference` unik (+ header `X-Offline-Sync` → JSON); antrean & draf keranjang localStorage (`lib/offline-sales.ts`); checkout offline-aware (`onNetworkError` → enqueue, auto-sync saat mount/event `online`); dialog antrean retry/buang; badge Offline. Test: `PosOfflineSyncTest` (4) + `PosOfflineQueueTest` (3 browser). Trap infrastruktur: tiap `visit()` = context baru → login lanjut dari page instance sama (`.ai/rules/browser.md`). |
 | 2.1 E2E/browser testing (Playwright) | ✅ SELESAI (2026-08-21) | `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik (+ not-found). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi → `.ai/rules/browser.md`. |
@@ -42,7 +43,8 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 | 2.1 | E2E / browser testing (Playwright) | ✅ Selesai |
 | 2.2 | PWA offline / antrean sinkronisasi POS | ✅ Selesai |
 | 2.3 | Cetak struk thermal/Bluetooth | ✅ Selesai |
-| — | Realtime (Reverb), push web, multi-cabang, ringkasan otomatis | 🔜 **Berikutnya** |
+| 2.4 | Realtime notifikasi (Laravel Reverb) | ✅ Selesai |
+| — | Push web, multi-cabang, ringkasan otomatis | 🔜 **Berikutnya** |
 | 1.1 | **Deploy ke produksi** | ⏳ **PALING AKHIR** — hanya setelah semua modul selesai & verifikasi bebas error |
 
 ### A. PWA offline / antrean sinkronisasi POS (2.2) — ✅ SELESAI
@@ -60,6 +62,14 @@ Implementasi yang sudah jalan (frontend murni, tanpa backend baru):
 - **UI**: `resources/js/components/thermal-print-dialog.tsx` (pilih 58/80mm via ToggleGroup, tombol Bluetooth/Kabel dengan status disabled bila tak didukung + pesan error); tombol "Cetak Thermal" di `sales/show.tsx` & `services/show.tsx`; fallback PDF A5 Dompdf tetap tersedia.
 - **Test**: `tests/Browser/ThermalPrintTest.php` — dialog terbuka dari kedua halaman + lebar kertas tersimpan ke localStorage. Catatan: headless Chrome punya `navigator.bluetooth`/`serial`, jadi jangan assert teks "tidak mendukung".
 - Verifikasi hardware nyata (pairing printer fisik) belum dilakukan — butuh printer thermal ESC/POS asli; protokol mengikuti standar industri (service 18F0).
+
+### B2. Realtime notifikasi via Laravel Reverb (2.4) — ✅ SELESAI
+Implementasi yang sudah jalan:
+- **Server**: `laravel/reverb` terpasang (`install:broadcasting` manual karena TTY); `bootstrap/app.php` + `routes/channels.php`; channel `App.Models.User.{id}` dijaga `UserNotificationsChannel` (hanya pemilik). **Port server 8081** via `REVERB_SERVER_PORT=8081` di `.env` — 8080 dipakai Apache lokal (trap: `servers.reverb.port` di config/reverb.php terpisah dari `REVERB_PORT` apps).
+- **Backend push**: listener sinkron `PushDatabaseNotificationToRealtime` (event `NotificationSent`) → broadcast `NotificationPushed` (**ShouldBroadcastNow** — sengaja tanpa queue worker, sesuai aturan notifikasi) ke channel user, event name `.notification.pushed`, payload = `toArray()`. Hanya notifikasi yang implement kontrak baru `App\Contracts\HasDatabasePayload` (sudah diimplement ketiga alert) dan channel `database`.
+- **Frontend**: `@laravel/echo-react` + `pusher-js`; `configureEcho({broadcaster:'reverb'})` di `app.tsx` (dijaga `VITE_REVERB_APP_KEY` ada); `NotificationsProvider` subscribe channel privat → refresh saat `.notification.pushed`; polling 30 dtk hanya fallback saat socket putus/belum tersambung/tak terkonfigurasi. CSRF auth channel dari `<meta name="csrf-token">` di `app.blade.php`.
+- **Test**: `RealtimeNotificationTest` (3): push terkirim utk notifikasi database (channel+payload), tidak push utk channel lain, otorisasi channel. Smoke server: handshake WS `101 Switching Protocols` di 8081.
+- **Catatan operasional**: restart `composer dev` agar TUI dev menjalankan `reverb:start` otomatis (Reverb mendaftar sendiri ke `php artisan dev`); nilai `VITE_REVERB_*` ter-bake saat build → jalankan `npm run build` setelah ubah env; produksi nanti butuh supervisor utk `reverb:start` + WebSocket di belakang proxy (TLS).
 
 ### C. Deploy ke domain produksi — PALING AKHIR
 Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh verifikasi hijau tanpa error**. Urutan eksekusi final saat saatnya tiba (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
@@ -87,7 +97,7 @@ Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh 
 ## 5. Verifikasi kualitas
 
 ```bash
-php artisan test --compact            # seluruh test (sesi terakhir: 232 total = 231 lulus + 1 skip)
+php artisan test --compact            # seluruh test (sesi terakhir: 235 total = 234 lulus + 1 skip)
 ./vendor/bin/pest tests/Browser       # hanya test browser Playwright
 vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 vendor/bin/pint --dirty --format agent

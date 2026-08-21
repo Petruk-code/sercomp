@@ -2,10 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Contracts\HasDatabasePayload;
 use App\Models\ServiceOrder;
 use Illuminate\Notifications\Notification;
 
-class ServiceReadyForPickupAlert extends Notification
+class ServiceReadyForPickupAlert extends Notification implements HasDatabasePayload
 {
     public function __construct(public ServiceOrder $service) {}
 

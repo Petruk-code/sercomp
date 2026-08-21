@@ -1,4 +1,5 @@
-import { useHttp } from '@inertiajs/react';
+import { useHttp, usePage } from '@inertiajs/react';
+import { echo, echoIsConfigured } from '@laravel/echo-react';
 import {
     createContext,
     useCallback,
@@ -15,7 +16,8 @@ import {
 } from '@/routes/notifications';
 import type { AppNotification } from '@/types';
 
-const POLL_INTERVAL_MS = 30_000;
+/** Polling cadangan — hanya aktif saat websocket Reverb tidak tersambung. */
+const FALLBACK_POLL_INTERVAL_MS = 30_000;
 
 export type NotificationSummary = {
     unread_count: number;
@@ -37,6 +39,7 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
     const [summary, setSummary] = useState<NotificationSummary | null>(null);
+    const userId = usePage().props.auth.user.id;
     const {
         get,
         post,
@@ -54,16 +57,61 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         refresh();
 
-        const interval = window.setInterval(refresh, POLL_INTERVAL_MS);
         const onFocus = () => refresh();
-
         window.addEventListener('focus', onFocus);
 
+        if (!echoIsConfigured()) {
+            // Tanpa websocket (kredensial VITE_REVERB_* kosong): polling biasa.
+            const interval = window.setInterval(
+                refresh,
+                FALLBACK_POLL_INTERVAL_MS,
+            );
+
+            return () => {
+                window.clearInterval(interval);
+                window.removeEventListener('focus', onFocus);
+            };
+        }
+
+        let fallbackInterval: number | undefined;
+        const startFallback = () => {
+            if (fallbackInterval === undefined) {
+                fallbackInterval = window.setInterval(
+                    refresh,
+                    FALLBACK_POLL_INTERVAL_MS,
+                );
+            }
+        };
+        const stopFallback = () => {
+            if (fallbackInterval !== undefined) {
+                window.clearInterval(fallbackInterval);
+                fallbackInterval = undefined;
+            }
+        };
+
+        const channelName = `App.Models.User.${userId}`;
+        const channel = echo<'reverb'>().private(channelName);
+        channel.listen('.notification.pushed', () => refresh());
+
+        // Selama websocket belum tersambung (atau putus), polling tetap jalan.
+        startFallback();
+        const unsubscribeConnection =
+            echo<'reverb'>().connector.onConnectionChange((status) => {
+                if (status === 'connected') {
+                    stopFallback();
+                    refresh();
+                } else {
+                    startFallback();
+                }
+            });
+
         return () => {
-            window.clearInterval(interval);
+            channel.stopListening('.notification.pushed');
+            unsubscribeConnection();
+            stopFallback();
             window.removeEventListener('focus', onFocus);
         };
-    }, [refresh]);
+    }, [refresh, userId]);
 
     const markRead = useCallback(
         (id: string) => {

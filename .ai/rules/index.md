@@ -9,6 +9,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Controllers/**, app/Http/Controllers/DashboardController.php, app/Http/Controllers/TrackingController.php | .ai/rules/controllers.md |
 | resources/css/** | .ai/rules/css.md |
 | **/*, composer.json | .ai/rules/general.md |
+| resources/js/hooks/** | .ai/rules/hooks.md |
 | resources/js/routes/** | .ai/rules/js-routes.md |
 | resources/js/** | .ai/rules/js.md |
 | app/Models/Role.php, app/Models/**, app/Models/User.php | .ai/rules/models.md |

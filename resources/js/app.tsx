@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { configureEcho } from '@laravel/echo-react';
 import { registerSW } from 'virtual:pwa-register';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,7 +8,15 @@ import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+// Hanya aktifkan websocket bila kredensial Reverb tersedia (build tanpa
+// konfigurasi tetap jalan — notifikasi fallback ke polling).
+if (import.meta.env.VITE_REVERB_APP_KEY) {
+    configureEcho({
+        broadcaster: 'reverb',
+    });
+}
+
+const appName = import.meta.env.VITE_APP_NAME || 'Servis Pos';
 
 registerSW({ immediate: true });
 

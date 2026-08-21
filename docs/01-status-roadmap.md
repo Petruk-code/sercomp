@@ -74,7 +74,7 @@ Ide berikutnya (belum diprioritaskan):
 
 - [x] Cetak struk langsung dari tablet ke printer thermal/Bluetooth
 - [ ] Push notification web untuk notifikasi servis/stok di HP yang ter-install
-- [ ] Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)
+- [x] Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)
 - [ ] Ringkasan laporan otomatis mingguan/bulanan via email
 - [ ] **Deploy ke hosting HTTPS + domain — PALING AKHIR**, hanya setelah semua modul selesai & verifikasi bebas error (runutan eksekusi final di bagian "Persiapan Produksi" di bawah)
 

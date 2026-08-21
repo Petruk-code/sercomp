@@ -2,11 +2,12 @@
 
 namespace App\Notifications;
 
+use App\Contracts\HasDatabasePayload;
 use App\Models\Product;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
-class LowStockAlert extends Notification
+class LowStockAlert extends Notification implements HasDatabasePayload
 {
     /**
      * @param  Collection<int, Product>  $products
