@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Pest\Browser\Api\AwaitableWebpage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -76,19 +77,24 @@ function seedAppRoles(): void
 /**
  * Login sebagai admin lewat form login asli di browser (bukan actingAs),
  * sehingga session cookie browser valid untuk visit() berikutnya.
+ *
+ * PENTING: setiap panggilan visit() membuat context browser baru tanpa
+ * cookie sesi. Karena itu helper ini mengembalikan halaman yang sudah
+ * login — lanjutkan alur dari instance ini dan pindah halaman dengan
+ * navigate(), jangan memanggil visit() lagi.
  */
-function loginBrowserAdmin(): User
+function loginBrowserAdmin(): AwaitableWebpage
 {
     seedAppRoles();
 
     $user = User::factory()->create();
     $user->assignRole('admin');
 
-    visit('/login')
+    $page = visit('/login')
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->click('@login-button')
         ->assertPathIs('/dashboard');
 
-    return $user;
+    return $page;
 }

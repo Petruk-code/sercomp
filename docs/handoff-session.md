@@ -38,18 +38,19 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 | 1.3 | Audit log aksi sensitif | ✅ Selesai |
 | 1.4 | Import/export CSV master & laporan | ✅ Selesai |
 | 2.1 | E2E / browser testing (Playwright) | ✅ Selesai |
-| 2.2 | PWA offline / antrean sinkronisasi POS | 🔜 **Berikutnya** |
-| 2.3 | Cetak struk thermal/Bluetooth | ⬜ Menunggu |
+| 2.2 | PWA offline / antrean sinkronisasi POS | ✅ Selesai |
+| 2.3 | Cetak struk thermal/Bluetooth | 🔜 **Berikutnya** |
 | — | Realtime (Reverb), push web, multi-cabang, ringkasan otomatis | ⬜ Ide lanjutan |
 | 1.1 | **Deploy ke produksi** | ⏳ **PALING AKHIR** — hanya setelah semua modul selesai & verifikasi bebas error |
 
-### A. PWA offline / antrean sinkronisasi POS (2.2) — BERIKUTNYA
-PWA sudah bisa di-install. Berikutnya: simpan keranjang/transaksi offline lalu sinkron saat online (mode kasir yang putus jaringan), karena koneksi toko sering tidak stabil. Ini modul paling menantang. Poin desain penting:
-- Idempotensi server-side (`client_reference` unik di tabel `sales`) agar replay antrean tidak menciptakan transaksi ganda/stok terpotong dua kali.
-- Antrean di sisi klien (localStorage/IndexedDB) + auto-sync saat koneksi kembali + indikator offline & jumlah antrean di halaman POS.
-- Kegagalan sync (mis. stok kurang) harus tampak jelas ke kasir dengan aksi buang/coba lagi.
+### A. PWA offline / antrean sinkronisasi POS (2.2) — ✅ SELESAI
+Implementasi yang sudah jalan:
+- **Backend idempotensi**: kolom `sales.client_reference` (nullable unique) + pre-check & catch `UniqueConstraintViolationException` di `SaleController@store`; header `X-Offline-Sync` mengubah respons redirect menjadi JSON (`{status, invoice_number, redirect_url}`) agar sync via fetch bisa membedakan sukses/gagal. Test: `tests/Feature/PosOfflineSyncTest.php` (4 test).
+- **Frontend antrean**: `resources/js/lib/offline-sales.ts` (antrean + draf keranjang di localStorage, `syncPendingSales()` via fetch berurutan), `resources/js/components/pos-offline-dialog.tsx` (dialog antrean: status pending/failed, retry, buang), integrasi `pos.tsx` (persist draf keranjang, checkout offline-aware dengan `client_reference` per attempt, `onNetworkError` → enqueue, auto-sync saat mount + event `online`, badge Offline + tombol Antrean).
+- **Test browser**: `tests/Browser/PosOfflineQueueTest.php` (auto-sync sukses, gagal stok → status failed, restore draf keranjang).
+- Catatan infrastruktur test: setiap `visit()` = context browser baru; login harus dilanjutkan dari page instance yang sama (lihat `.ai/rules/browser.md`).
 
-### B. Setelah 2.2: cetak struk thermal (2.3) → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis
+### B. Setelah 2.2: cetak struk thermal (2.3) — BERIKUTNYA → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis
 Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
 
 > Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).

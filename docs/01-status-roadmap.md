@@ -67,7 +67,7 @@ Prioritas tinggi:
 - [x] ~~Audit log untuk aksi sensitif~~ — **SELESAI (2026-08-15)**, rekomendasi 1.3.
 - [x] ~~Import/export data master & laporan (Excel/CSV)~~ — **SELESAI (2026-08-15)**, rekomendasi 1.4 (CSV; Excel/XLSX belum — CSV cukup untuk skala ini).
 - [x] ~~Browser/E2E testing (Playwright) sebagai pelengkap test Pest~~ — **SELESAI (2026-08-21)**, rekomendasi 2.1 (suite `tests/Browser`, 8 test).
-- [ ] **PWA offline / antrean sinkronisasi POS** — 🔜 BERIKUTNYA, rekomendasi 2.2 (idempotensi `client_reference`, antrean klien, auto-sync).
+- [x] **PWA offline / antrean sinkronisasi POS** — ✅ SELESAI, rekomendasi 2.2 (idempotensi `client_reference`, antrean localStorage + auto-sync, dialog retry/buang, test feature & browser).
 - [ ] Dukungan multi-cabang / multi-toko (tenant)
 
 Ide berikutnya (belum diprioritaskan):

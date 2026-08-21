@@ -10,7 +10,7 @@ use App\Models\Sale;
 */
 
 it('completes the POS checkout flow until the nota is shown', function () {
-    loginBrowserAdmin();
+    $page = loginBrowserAdmin();
 
     $product = Product::factory()->create([
         'name' => 'SSD Samsung 980 1TB',
@@ -19,7 +19,7 @@ it('completes the POS checkout flow until the nota is shown', function () {
         'selling_price' => 150000,
     ]);
 
-    visit('/pos')
+    $page->navigate('/pos')
         ->click('SSD Samsung 980 1TB')
         ->fill('paid_amount', '150000')
         ->click('#pos-cart button.w-full')

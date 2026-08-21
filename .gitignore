@@ -3,6 +3,7 @@
 /tsconfig.tsbuildinfo
 /node_modules
 /public/build
+/public/favicon
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

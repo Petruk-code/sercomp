@@ -34,7 +34,7 @@ Produk, pelanggan, supplier, laporan penjualan/servis/hutang. Pakai `maatwebsite
 Lapisan test saat ini 100% backend (Pest). Alur lintas halaman yang kritis (POS → checkout → nota, servis → status → tracking → WhatsApp) belum diuji di browser. Tambah smoke test semua route autentikasi (cek error JS + 5xx). — **SELESAI (2026-08-21)**: `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke` — bebas error JS & console), alur POS → checkout → nota (invoice, Lunas, stok berkurang), dan servis → status → tracking publik (+ state tidak ditemukan). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi tercatat di `.ai/rules/browser.md`.
 
 ### 2.2 PWA offline / antrean sinkronisasi POS
-PWA sudah bisa di-install. Berikutnya: simpan keranjang/transaksi offline lalu sinkron saat online (mode kasir yang putus jaringan), karena koneksi toko sering tidak stabil. Ini modul paling menantang — lakukan setelah 1.x selesai.
+PWA sudah bisa di-install. Berikutnya: simpan keranjang/transaksi offline lalu sinkron saat online (mode kasir yang putus jaringan), karena koneksi toko sering tidak stabil. — **SELESAI (2026-08-21)**: idempotensi server via `sales.client_reference` unik (+ header `X-Offline-Sync` → respons JSON untuk sync fetch); antrean & draf keranjang di localStorage (`resources/js/lib/offline-sales.ts`); checkout POS offline-aware (`onNetworkError` → enqueue, auto-sync saat mount/event `online`); dialog antrean dengan status pending/failed + retry/buang; badge Offline di halaman POS. Test: `PosOfflineSyncTest` (4 feature) + `PosOfflineQueueTest` (3 browser).
 
 ### 2.3 Cetak struk langsung dari tablet ke printer thermal/Bluetooth
 Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibilitas perangkat; jadikan iterasi terpisah.
@@ -60,6 +60,6 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 3. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
 4. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
 5. ~~E2E Playwright smoke (1–2 hari).~~ — **SELESAI (2026-08-21)**: suite `tests/Browser` (8 test) — smoke 31 route autentikasi + alur POS→nota & servis→tracking.
-6. **PWA offline / antrean sinkronisasi POS (2.2)** — BERIKUTNYA.
-7. Cetak struk thermal (2.3), lalu realtime, push web, multi-cabang, ringkasan otomatis (estimasi per-modul saat mulai).
+6. ~~PWA offline / antrean sinkronisasi POS (2.2)~~ — **SELESAI (2026-08-21)**: idempotensi `client_reference` + antrean localStorage + auto-sync + dialog antrean.
+7. **Cetak struk thermal (2.3)** — BERIKUTNYA; lalu realtime, push web, multi-cabang, ringkasan otomatis (estimasi per-modul saat mulai).
 8. **Deploy produksi — PALING AKHIR**: hanya setelah semua modul di atas selesai & verifikasi bebas error (checklist di `docs/03-operasional.md`).

@@ -9,9 +9,9 @@ use App\Models\ServiceOrder;
 */
 
 it('creates a service order, updates its status and tracks it publicly', function () {
-    loginBrowserAdmin();
+    $page = loginBrowserAdmin();
 
-    visit('/services/create')
+    $page->navigate('/services/create')
         ->fill('item_name', 'Laptop Asus ROG')
         ->fill('complaint', 'Tidak bisa menyala sama sekali')
         ->press('Simpan Servis')
@@ -25,14 +25,14 @@ it('creates a service order, updates its status and tracks it publicly', functio
     expect($order->tracking_token)->not->toBeNull();
     expect($order->invoice_number)->toStartWith('SRV-');
 
-    visit('/services/'.$order->id)
+    $page->navigate('/services/'.$order->id)
         ->select('status', 'in_progress')
         ->press('Update Status')
         ->assertSee('Status servis menjadi');
 
     expect($order->fresh()->status)->toBe('in_progress');
 
-    visit('/services/'.$order->id)
+    $page->navigate('/services/'.$order->id)
         ->select('status', 'done')
         ->press('Update Status')
         ->assertSee('Status servis menjadi');
@@ -40,7 +40,7 @@ it('creates a service order, updates its status and tracks it publicly', functio
     expect($order->fresh()->status)->toBe('done');
     expect($order->fresh()->completed_at)->not->toBeNull();
 
-    visit("/tracking?token={$order->tracking_token}")
+    $page->navigate("/tracking?token={$order->tracking_token}")
         ->assertSee('Laptop Asus ROG')
         ->assertSee($order->invoice_number)
         ->assertNoSmoke();
