@@ -56,9 +56,10 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 ## 5. Rekomendasi urutan kerja
 
 1. ~~Git init + baseline commit (0.5–1 hari).~~ — **SELESAI (2026-08-15)**.
-2. Deploy produksi per checklist (1–2 hari + verifikasi).
-3. ~~Audit log aksi sensitif (1–2 hari).~~ — **SELESAI (2026-08-15)**.
-4. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
-5. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
-6. ~~E2E Playwright smoke (1–2 hari).~~ — **SELESAI (2026-08-21)**: suite `tests/Browser` (8 test) — smoke 31 route autentikasi + alur POS→nota & servis→tracking.
-7. Baru setelah itu: PWA offline, thermal print, realtime, multi-cabang (estimasi per-modul saat mulai).
+2. ~~Audit log aksi sensitif (1–2 hari).~~ — **SELESAI (2026-08-15)**.
+3. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
+4. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
+5. ~~E2E Playwright smoke (1–2 hari).~~ — **SELESAI (2026-08-21)**: suite `tests/Browser` (8 test) — smoke 31 route autentikasi + alur POS→nota & servis→tracking.
+6. **PWA offline / antrean sinkronisasi POS (2.2)** — BERIKUTNYA.
+7. Cetak struk thermal (2.3), lalu realtime, push web, multi-cabang, ringkasan otomatis (estimasi per-modul saat mulai).
+8. **Deploy produksi — PALING AKHIR**: hanya setelah semua modul di atas selesai & verifikasi bebas error (checklist di `docs/03-operasional.md`).

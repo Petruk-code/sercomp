@@ -28,10 +28,34 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 - **Notifikasi WhatsApp ke pelanggan — MANUAL saja**: tombol "Kirim WhatsApp" di detail servis (admin/owner/casher); auto-kirim saat `done` dihapus (anti-spam).
 - **Bug fix review**: prop `notifications` → `notificationSummary` (tabrakan di halaman `/notifications`), toast pertama "tertelan" (guard `seenIds.size === 0` → ref `initialized`), qty POS di-clamp `Math.min(Math.max(qty,1), product.stock)`.
 
-## 3. Siap dikerjakan berikutnya (urut saran)
+## 3. Checklist status & siap dikerjakan berikutnya (urut saran)
 
-### A. Deploy ke domain produksi (runutan terakhir)
-Masih tahap pengembangan; urutan final saat siap live (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
+### Checklist rekomendasi
+
+| # | Rekomendasi | Status |
+| --- | --- | --- |
+| 1.2 | Kencangkan sistem notifikasi | ✅ Selesai |
+| 1.3 | Audit log aksi sensitif | ✅ Selesai |
+| 1.4 | Import/export CSV master & laporan | ✅ Selesai |
+| 2.1 | E2E / browser testing (Playwright) | ✅ Selesai |
+| 2.2 | PWA offline / antrean sinkronisasi POS | 🔜 **Berikutnya** |
+| 2.3 | Cetak struk thermal/Bluetooth | ⬜ Menunggu |
+| — | Realtime (Reverb), push web, multi-cabang, ringkasan otomatis | ⬜ Ide lanjutan |
+| 1.1 | **Deploy ke produksi** | ⏳ **PALING AKHIR** — hanya setelah semua modul selesai & verifikasi bebas error |
+
+### A. PWA offline / antrean sinkronisasi POS (2.2) — BERIKUTNYA
+PWA sudah bisa di-install. Berikutnya: simpan keranjang/transaksi offline lalu sinkron saat online (mode kasir yang putus jaringan), karena koneksi toko sering tidak stabil. Ini modul paling menantang. Poin desain penting:
+- Idempotensi server-side (`client_reference` unik di tabel `sales`) agar replay antrean tidak menciptakan transaksi ganda/stok terpotong dua kali.
+- Antrean di sisi klien (localStorage/IndexedDB) + auto-sync saat koneksi kembali + indikator offline & jumlah antrean di halaman POS.
+- Kegagalan sync (mis. stok kurang) harus tampak jelas ke kasir dengan aksi buang/coba lagi.
+
+### B. Setelah 2.2: cetak struk thermal (2.3) → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis
+Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
+
+> Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).
+
+### C. Deploy ke domain produksi — PALING AKHIR
+Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh verifikasi hijau tanpa error**. Urutan eksekusi final saat saatnya tiba (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
 
 1. Siapkan hosting + domain + SSL (Laravel Cloud / Forge / VPS + nginx).
 2. `.env` produksi: `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` baru, kredensial DB non-root, `MAIL_*`.
@@ -43,11 +67,6 @@ Masih tahap pengembangan; urutan final saat siap live (checklist detail: `docs/0
 8. Cron scheduler: `* * * * * php /path/proyek/artisan schedule:run`.
 9. Verifikasi pasca-deploy: scan QR, `/tracking?token=…` dari HP & PC beda jaringan, percobaan ke-21 → `429`, login 2FA, unduh kartu lacak PDF.
 10. Cetak ulang tanda terima & kirim ulang link WhatsApp lama (QR lama masih `localhost`) — opsional.
-
-### B. Roadmap berikutnya (lihat `docs/05-rekomendasi-pengembangan.md` §5)
-Urutan: **PWA offline / antrean sinkronisasi POS (2.2)** → **cetak struk thermal/Bluetooth (2.3)** → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis. Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
-
-> Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).
 
 ## 4. Konvensi wajib (baca sebelum menulis kode)
 

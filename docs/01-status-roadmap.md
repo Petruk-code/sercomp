@@ -67,14 +67,16 @@ Prioritas tinggi:
 - [x] ~~Audit log untuk aksi sensitif~~ — **SELESAI (2026-08-15)**, rekomendasi 1.3.
 - [x] ~~Import/export data master & laporan (Excel/CSV)~~ — **SELESAI (2026-08-15)**, rekomendasi 1.4 (CSV; Excel/XLSX belum — CSV cukup untuk skala ini).
 - [x] ~~Browser/E2E testing (Playwright) sebagai pelengkap test Pest~~ — **SELESAI (2026-08-21)**, rekomendasi 2.1 (suite `tests/Browser`, 8 test).
+- [ ] **PWA offline / antrean sinkronisasi POS** — 🔜 BERIKUTNYA, rekomendasi 2.2 (idempotensi `client_reference`, antrean klien, auto-sync).
 - [ ] Dukungan multi-cabang / multi-toko (tenant)
 
 Ide berikutnya (belum diprioritaskan):
 
-- [ ] Deploy ke hosting HTTPS + domain (runutan eksekusi final di bagian "Persiapan Produksi" di bawah)
-- [ ] Push notification web untuk notifikasi servis/stok di HP yang ter-install
-- [ ] Mode offline penuh / antrean sinkronisasi untuk kasir (PWA tingkat lanjut)
 - [ ] Cetak struk langsung dari tablet ke printer thermal/Bluetooth
+- [ ] Push notification web untuk notifikasi servis/stok di HP yang ter-install
+- [ ] Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)
+- [ ] Ringkasan laporan otomatis mingguan/bulanan via email
+- [ ] **Deploy ke hosting HTTPS + domain — PALING AKHIR**, hanya setelah semua modul selesai & verifikasi bebas error (runutan eksekusi final di bagian "Persiapan Produksi" di bawah)
 
 ## Persiapan Produksi — Runutan Terakhir
 
