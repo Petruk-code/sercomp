@@ -30,6 +30,7 @@ class StoreSaleRequest extends FormRequest
             'paid_amount' => ['required', 'numeric', 'min:0'],
             'labor_cost' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'client_reference' => ['nullable', 'string', 'max:64'],
             'items' => ['nullable', 'array', 'min:1'],
             'items.*.product_id' => ['nullable', 'exists:products,id'],
             'items.*.name' => ['nullable', 'string', 'max:255'],

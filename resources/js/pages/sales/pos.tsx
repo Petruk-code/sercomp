@@ -1,21 +1,42 @@
 import { Head, router } from '@inertiajs/react';
-import { Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import {
+    CloudUpload,
+    Minus,
+    Plus,
+    Search,
+    ShoppingCart,
+    Trash2,
+    WifiOff,
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import SaleController from '@/actions/App/Http/Controllers/Sales/SaleController';
 import { PageHeader } from '@/components/page-header';
+import { PosOfflineDialog } from '@/components/pos-offline-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    clearCartDraft,
+    createReference,
+    dequeueSale,
+    enqueueSale,
+    readCartDraft,
+    readQueue,
+    retrySale,
+    saveCartDraft,
+    syncPendingSales
+    
+    
+} from '@/lib/offline-sales';
+import type {QueuedSale, QueuedSaleItem} from '@/lib/offline-sales';
 import { formatCurrency } from '@/lib/utils';
 import { index } from '@/routes/sales';
 import type { Customer, Product } from '@/types';
 
-type CartItem = {
-    product_id: number | null;
-    name: string;
-    quantity: number;
-    price: number;
-};
+type CartItem = QueuedSaleItem;
+
+const storeUrl = SaleController.store.url();
 
 type Props = {
     products: Product[];
@@ -30,13 +51,20 @@ export default function Pos({
     paymentMethods,
     paymentMethodLabels,
 }: Props) {
+    const draft = readCartDraft();
     const [search, setSearch] = useState('');
-    const [cart, setCart] = useState<CartItem[]>([]);
-    const [customerId, setCustomerId] = useState('');
-    const [discount, setDiscount] = useState(0);
-    const [paymentMethod, setPaymentMethod] = useState('cash');
-    const [paidAmount, setPaidAmount] = useState(0);
+    const [cart, setCart] = useState<CartItem[]>(draft?.cart ?? []);
+    const [customerId, setCustomerId] = useState(draft?.customerId ?? '');
+    const [discount, setDiscount] = useState(draft?.discount ?? 0);
+    const [paymentMethod, setPaymentMethod] = useState(
+        draft?.paymentMethod ?? 'cash',
+    );
+    const [paidAmount, setPaidAmount] = useState(draft?.paidAmount ?? 0);
     const [processing, setProcessing] = useState(false);
+    const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+    const [queue, setQueue] = useState<QueuedSale[]>(() => readQueue());
+    const [syncing, setSyncing] = useState(false);
+    const [queueOpen, setQueueOpen] = useState(false);
 
     const filteredProducts = useMemo(
         () =>
@@ -59,6 +87,71 @@ export default function Pos({
     );
     const total = Math.max(subtotal - discount, 0);
     const change = Math.max(paidAmount - total, 0);
+
+    useEffect(() => {
+        saveCartDraft({
+            cart,
+            customerId,
+            discount,
+            paymentMethod,
+            paidAmount,
+        });
+    }, [cart, customerId, discount, paymentMethod, paidAmount]);
+
+    const refreshQueue = useCallback(() => setQueue(readQueue()), []);
+
+    const syncQueue = useCallback(async (): Promise<void> => {
+        if (!navigator.onLine || syncing) {
+            return;
+        }
+
+        if (readQueue().every((sale) => sale.status !== 'pending')) {
+            return;
+        }
+
+        setSyncing(true);
+
+        const result = await syncPendingSales(storeUrl, {
+            onSynced: (_sale, invoiceNumber) => {
+                toast.success(`Transaksi ${invoiceNumber} berhasil dikirim.`);
+            },
+            onFailed: (_sale, message) => {
+                toast.error(message);
+            },
+        });
+
+        setSyncing(false);
+        refreshQueue();
+
+        if (result) {
+            router.reload({ only: ['products'] });
+        } else if (!navigator.onLine) {
+            toast.info('Masih offline — antrean akan dikirim saat koneksi kembali.');
+        }
+    }, [refreshQueue, syncing]);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => void syncQueue(), 0);
+
+        return () => window.clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        const goOnline = () => {
+            setIsOnline(true);
+            void syncQueue();
+        };
+        const goOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', goOnline);
+        window.addEventListener('offline', goOffline);
+
+        return () => {
+            window.removeEventListener('online', goOnline);
+            window.removeEventListener('offline', goOffline);
+        };
+    }, [syncQueue]);
 
     function addToCart(product: Product) {
         setCart((current) => {
@@ -122,32 +215,65 @@ export default function Pos({
         );
     }
 
+    function resetCart() {
+        setCart([]);
+        setCustomerId('');
+        setDiscount(0);
+        setPaidAmount(0);
+        clearCartDraft();
+    }
+
+    function buildPayload(reference: string) {
+        return {
+            customer_id: customerId || undefined,
+            payment_method: paymentMethod,
+            discount,
+            paid_amount: paidAmount,
+            client_reference: reference,
+            items: cart.map((item) => ({
+                product_id: item.product_id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+            })),
+        };
+    }
+
     function checkout() {
-        if (cart.length === 0) {
+        if (cart.length === 0 || processing) {
             return;
         }
 
         setProcessing(true);
 
-        router.post(
-            SaleController.store.url(),
-            {
-                customer_id: customerId || undefined,
-                payment_method: paymentMethod,
-                discount,
-                paid_amount: paidAmount,
-                items: cart.map((item) => ({
-                    product_id: item.product_id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
+        const reference = createReference();
+        const payload = buildPayload(reference);
+
+        if (!navigator.onLine) {
+            enqueueSale(payload, total);
+            refreshQueue();
+            toast.info(
+                'Anda offline — transaksi disimpan ke antrean dan dikirim otomatis saat online.',
+            );
+            resetCart();
+            setProcessing(false);
+
+            return;
+        }
+
+        router.post(storeUrl, payload, {
+            preserveScroll: true,
+            onSuccess: () => clearCartDraft(),
+            onNetworkError: () => {
+                enqueueSale(payload, total);
+                refreshQueue();
+                toast.info(
+                    'Koneksi terputus — transaksi disimpan ke antrean offline.',
+                );
+                resetCart();
             },
-            {
-                preserveScroll: true,
-                onFinish: () => setProcessing(false),
-            },
-        );
+            onFinish: () => setProcessing(false),
+        });
     }
 
     return (
@@ -239,9 +365,27 @@ export default function Pos({
                                 <ShoppingCart className="size-4" />
                                 Keranjang
                             </h3>
-                            <span className="text-sm text-muted-foreground">
-                                {cart.length} item
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {!isOnline && (
+                                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+                                        <WifiOff className="size-3" />
+                                        Offline
+                                    </span>
+                                )}
+                                {queue.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setQueueOpen(true)}
+                                    >
+                                        <CloudUpload />
+                                        Antrean ({queue.length})
+                                    </Button>
+                                )}
+                                <span className="text-sm text-muted-foreground">
+                                    {cart.length} item
+                                </span>
+                            </div>
                         </div>
 
                         <div className="max-h-72 min-h-0 space-y-3 overflow-y-auto p-5 md:max-h-none md:flex-1">
@@ -457,6 +601,23 @@ export default function Pos({
                     </Button>
                 </div>
             </div>
+
+            <PosOfflineDialog
+                open={queueOpen}
+                onOpenChange={setQueueOpen}
+                items={queue}
+                syncing={syncing}
+                onSyncAll={() => void syncQueue()}
+                onRetry={(reference) => {
+                    retrySale(reference);
+                    refreshQueue();
+                    void syncQueue();
+                }}
+                onDiscard={(reference) => {
+                    dequeueSale(reference);
+                    refreshQueue();
+                }}
+            />
         </div>
     );
 }

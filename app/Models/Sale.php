@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string $payment_status
  * @property string $paid_amount
  * @property string|null $notes
+ * @property string|null $client_reference
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -40,6 +41,7 @@ use Illuminate\Support\Carbon;
     'payment_status',
     'paid_amount',
     'notes',
+    'client_reference',
 ])]
 class Sale extends Model
 {

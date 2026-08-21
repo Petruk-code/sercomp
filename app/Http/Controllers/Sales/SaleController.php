@@ -14,6 +14,8 @@ use App\Support\AuditLogger;
 use App\Support\InvoiceNumber;
 use App\Support\StockManager;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -65,18 +67,43 @@ class SaleController extends Controller
     /**
      * Store a new retail sale.
      */
-    public function store(StoreSaleRequest $request): RedirectResponse
+    public function store(StoreSaleRequest $request): RedirectResponse|JsonResponse
     {
         $items = $request->input('items', []);
+        $offlineSync = $request->hasHeader('X-Offline-Sync');
 
         if (empty($items)) {
+            if ($offlineSync) {
+                return response()->json(['message' => __('Keranjang masih kosong.')], 422);
+            }
+
             Inertia::flash('toast', ['type' => 'error', 'message' => __('Keranjang masih kosong.')]);
 
             return back();
         }
 
+        $reference = $request->input('client_reference');
+
+        if (is_string($reference) && $reference !== '') {
+            $existing = Sale::query()->where('client_reference', $reference)->first();
+
+            if ($existing !== null) {
+                if ($offlineSync) {
+                    return response()->json([
+                        'status' => 'replayed',
+                        'invoice_number' => $existing->invoice_number,
+                        'redirect_url' => route('sales.show', $existing),
+                    ]);
+                }
+
+                Inertia::flash('toast', ['type' => 'info', 'message' => __('Transaksi '.$existing->invoice_number.' sudah tersinkron sebelumnya.')]);
+
+                return redirect()->route('sales.show', $existing);
+            }
+        }
+
         try {
-            $sale = DB::transaction(function () use ($request, $items): Sale {
+            $sale = DB::transaction(function () use ($request, $items, $reference): Sale {
                 $rows = [];
 
                 foreach ($items as $item) {
@@ -119,6 +146,7 @@ class SaleController extends Controller
                     'payment_status' => $paid >= $total ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid'),
                     'paid_amount' => $paid,
                     'notes' => $request->input('notes'),
+                    'client_reference' => $reference,
                 ]);
 
                 $sale->items()->createMany($rows);
@@ -126,12 +154,30 @@ class SaleController extends Controller
                 return $sale;
             });
         } catch (InsufficientStockException $exception) {
+            if ($offlineSync) {
+                return response()->json(['message' => __('Stok :name tidak mencukupi.', ['name' => $exception->productName])], 422);
+            }
+
             Inertia::flash('toast', [
                 'type' => 'error',
                 'message' => __('Stok :name tidak mencukupi.', ['name' => $exception->productName]),
             ]);
 
             return back();
+        } catch (UniqueConstraintViolationException) {
+            $existing = Sale::query()->where('client_reference', $reference)->firstOrFail();
+
+            if ($offlineSync) {
+                return response()->json([
+                    'status' => 'replayed',
+                    'invoice_number' => $existing->invoice_number,
+                    'redirect_url' => route('sales.show', $existing),
+                ]);
+            }
+
+            Inertia::flash('toast', ['type' => 'info', 'message' => __('Transaksi '.$existing->invoice_number.' sudah tersinkron sebelumnya.')]);
+
+            return redirect()->route('sales.show', $existing);
         }
 
         AuditLogger::record(
@@ -150,6 +196,14 @@ class SaleController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Transaksi '.$sale->invoice_number.' berhasil.')]);
+
+        if ($offlineSync) {
+            return response()->json([
+                'status' => 'created',
+                'invoice_number' => $sale->invoice_number,
+                'redirect_url' => route('sales.show', $sale),
+            ]);
+        }
 
         return redirect()->route('sales.show', $sale);
     }
