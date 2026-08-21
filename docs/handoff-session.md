@@ -71,6 +71,20 @@ Implementasi yang sudah jalan:
 - **Test**: `RealtimeNotificationTest` (3): push terkirim utk notifikasi database (channel+payload), tidak push utk channel lain, otorisasi channel. Smoke server: handshake WS `101 Switching Protocols` di 8081.
 - **Catatan operasional**: restart `composer dev` agar TUI dev menjalankan `reverb:start` otomatis (Reverb mendaftar sendiri ke `php artisan dev`); nilai `VITE_REVERB_*` ter-bake saat build → jalankan `npm run build` setelah ubah env; produksi nanti butuh supervisor utk `reverb:start` + WebSocket di belakang proxy (TLS).
 
+### B3. Multi-cabang / multi-toko (2.5) — ✅ SELESAI
+Skema sederhana satu database dengan kolom `store_id` (**Opsi A**: semua data terpisah per cabang):
+- **Migrasi** `2026_08_21_080807_add_store_id_to_tables.php` — tabel `stores` + seed default "Cabang Utama" + `store_id` FK nullable di products/customers/suppliers/service_catalogs/sales/service_orders/purchases (+users). Tabel anak mengikuti induk; categories & invoice_sequences tetap global.
+- **Konteks cabang**: `app/Support/StoreContext.php` — resolusi berurutan: user terikat (`users.store_id`) → session `active_store_id` tervalidasi → null (= tanpa scoping; console/publik/test lama tetap jalan). **Memo disimpan di container, BUKAN static** — static bocor antar-test Pest (share() ikut jalan saat render error 403) dan tidak aman Octane.
+- **Trait** `App\Concerns\BelongsToStore` — global scope filter + hook `creating` auto-isi store_id; dipasang di 7 model tsb.
+- **Pindah cabang**: `PUT stores/active` (`StoreController@switchActive`, hanya user dengan store_id null via `StoreContext::canSwitch`); UI dropdown `store-switcher.tsx` di sidebar header (muncul bila ≥2 cabang aktif); props Inertia `stores` + `activeStoreId` di `HandleInertiaRequests`.
+- **CRUD cabang**: role admin/owner (`stores.index/create/store/edit/update`, tanpa delete — pakai `is_active`); halaman `resources/js/pages/stores/`; form user dapat select cabang opsional (kosong = bebas pindah).
+- **Test**: `MultiStoreTest` (9) — isolasi antar cabang, auto-fill, owner bebas sebelum memilih, switch tersimpan di sesi, kasir terikat ditolak pindah, cabang nonaktif ditolak, daftar cabang di form user, otorisasi CRUD. Catatan: rute `master.products.*` khusus admin/owner — untuk uji scoping sebagai kasir pakai rute lain (customers).
+
+### B4. Email ringkasan bulanan (2.6) — ✅ SELESAI
+- **Command** `app:send-monthly-report` (`SendMonthlyReport`) — default periode bulan kalender sebelumnya, opsi `--month=Y-m`; kirim ke semua user role **owner** (bukan admin). Jadwal tanggal 1 jam 07:00 di `routes/console.php`.
+- **Mailable** `MonthlyReportMail` + markdown `resources/views/mail/monthly-report.blade.php`. Isi: penjualan per cabang + total, servis masuk/selesai (berdasar `completed_at`), hutang supplier jatuh tempo (due_date ≤ akhir periode & belum lunas), stok menipis (stock ≤ min_stock, min_stock > 0, maks 15 item).
+- **Test**: `MonthlyReportTest` (2) — data benar + view ter-render, tidak kirim tanpa owner; jadwal dicek di `ScheduleTest`. Lokale app `en` → jangan hardcode nama bulan Indonesia di asersi.
+
 ### C. Deploy ke domain produksi — PALING AKHIR
 Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh verifikasi hijau tanpa error**. Urutan eksekusi final saat saatnya tiba (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
 
@@ -97,7 +111,7 @@ Dikerjakan **hanya setelah seluruh roadmap (2.2, 2.3, dst.) selesai dan seluruh 
 ## 5. Verifikasi kualitas
 
 ```bash
-php artisan test --compact            # seluruh test (sesi terakhir: 235 total = 234 lulus + 1 skip)
+php artisan test --compact            # seluruh test (sesi terakhir: 246 total = 245 lulus + 1 skip)
 ./vendor/bin/pest tests/Browser       # hanya test browser Playwright
 vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 vendor/bin/pint --dirty --format agent

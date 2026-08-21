@@ -13,3 +13,5 @@ Schedule::command('app:backup-database')->dailyAt('02:00');
 Schedule::command('app:send-alerts')->hourly();
 
 Schedule::command('notifications:prune')->daily();
+
+Schedule::command('app:send-monthly-report')->monthlyOn(1, '07:00');

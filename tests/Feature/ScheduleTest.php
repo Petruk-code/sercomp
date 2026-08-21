@@ -13,5 +13,6 @@ test('the backup, alert, and notification pruning commands are scheduled', funct
 
     expect($scheduled('app:backup-database'))->toBeTrue()
         ->and($scheduled('app:send-alerts'))->toBeTrue()
-        ->and($scheduled('notifications:prune'))->toBeTrue();
+        ->and($scheduled('notifications:prune'))->toBeTrue()
+        ->and($scheduled('app:send-monthly-report'))->toBeTrue();
 });
