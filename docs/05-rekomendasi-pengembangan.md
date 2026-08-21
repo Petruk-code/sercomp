@@ -41,10 +41,10 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 
 ## 3. Prioritas rendah / ide lanjutan
 
-- **Realtime dengan WebSocket (Laravel Reverb)** menggantikan polling 30 dtk — hanya jika notifikasi realtime menjadi kebutuhan utama (multiuser toko).
-- **Multi-cabang / multi-toko (tenant)**: skema multi-tenant sederhana (`store_id`) vs paket (stancl/tenancy). Dampak luas ke hampir semua query — mulai dari laporan & POS dulu.
-- **Push notification web** untuk servis siap diambil / stok menipis di HP staf (Web Push API / Laravel Notifications + VAPID). Perlu consent & izin khusus; cocok dilanjutkan dari fitur notifikasi in-app.
-- **Ringkasan laporan otomatis (mingguan/bulanan)** via email — nilai tambah untuk pemilik, berpasangan dengan audit log.
+- ~~**Realtime dengan WebSocket (Laravel Reverb)** menggantikan polling 30 dtk~~ — **SELESAI (2026-08-21)**: push instan via Reverb (port 8081), polling 30 dtk hanya fallback; detail di handoff B2 & `.ai/rules/hooks.md`.
+- ~~**Multi-cabang / multi-toko (tenant)**~~ — **SELESAI (2026-08-21)**: skema sederhana `store_id` satu database (Opsi A); konteks cabang `StoreContext`, trait `BelongsToStore`, pindah cabang + CRUD cabang; panduan di `docs/06-multi-cabang-email-bulanan.md`.
+- **Push notification web** untuk servis siap diambil / stok menipis di HP staf (Web Push API / Laravel Notifications + VAPID). Perlu consent & izin khusus; cocok dilanjutkan dari fitur notifikasi in-app — realtime in-app sudah jalan via Reverb.
+- ~~**Ringkasan laporan otomatis (mingguan/bulanan)** via email~~ — **SELESAI (2026-08-21)**: bulanan ke owner tanggal 1 jam 07:00 (`app:send-monthly-report`); panduan di `docs/06-multi-cabang-email-bulanan.md`.
 
 ## 4. Catatan teknis yang memengaruhi keputusan
 
@@ -61,5 +61,6 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 4. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
 5. ~~E2E Playwright smoke (1–2 hari).~~ — **SELESAI (2026-08-21)**: suite `tests/Browser` (8 test) — smoke 31 route autentikasi + alur POS→nota & servis→tracking.
 6. ~~PWA offline / antrean sinkronisasi POS (2.2)~~ — **SELESAI (2026-08-21)**: idempotensi `client_reference` + antrean localStorage + auto-sync + dialog antrean.
-7. ~~Cetak struk thermal (2.3)~~ — **SELESAI (2026-08-21)**: ESC/POS via Web Bluetooth/Web Serial dari browser; fallback PDF tetap ada. Berikutnya: realtime, push web, multi-cabang, ringkasan otomatis (estimasi per-modul saat mulai).
-8. **Deploy produksi — PALING AKHIR**: hanya setelah semua modul di atas selesai & verifikasi bebas error (checklist di `docs/03-operasional.md`).
+7. ~~Cetak struk thermal (2.3)~~ — **SELESAI (2026-08-21)**: ESC/POS via Web Bluetooth/Web Serial dari browser; fallback PDF tetap ada.
+8. ~~Realtime Reverb (2.4), multi-cabang (2.5), email bulanan (2.6)~~ — **SELESAI (2026-08-21)**: detail di `docs/06-multi-cabang-email-bulanan.md` & handoff B–B4.
+9. **Deploy produksi — PALING AKHIR**: hanya setelah semua modul di atas selesai & verifikasi bebas error (checklist di `docs/03-operasional.md`).

@@ -9,6 +9,7 @@ Folder ini berisi **catatan status & pengembangan proyek**, disusun mengikuti pr
 | [`03-operasional.md`](03-operasional.md) | PWA & akses HP, scheduler, backup database, dan persiapan produksi |
 | [`04-whatsapp-2fa-otp.md`](04-whatsapp-2fa-otp.md) | WhatsApp 2FA & OTP: cara aktifkan/nonaktifkan, alur kode OTP, konfigurasi, recovery lockout |
 | [`05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md) | **Peta prioritas pengembangan**: prekondisi teknis, jangka pendek/menengah/lanjutan, urutan kerja |
+| [`06-multi-cabang-email-bulanan.md`](06-multi-cabang-email-bulanan.md) | Multi-cabang (skema `store_id`, pindah cabang, CRUD cabang) & email ringkasan bulanan: panduan pakai + referensi teknis |
 | [`handoff-session.md`](handoff-session.md) | **Briefing kerja untuk sesi berikutnya**: posisi proyek, ringkasan yang sudah selesai, dan langkah lanjutan (acuan: `05-rekomendasi-pengembangan.md`) |
 
 ## Cara pakai folder ini

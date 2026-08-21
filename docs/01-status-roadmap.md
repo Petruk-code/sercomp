@@ -4,15 +4,16 @@
 
 ## Status saat ini
 
-Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (223: 222 lulus + 1 skipped PwaTest — termasuk 8 test browser Playwright), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Arah pengembangan berikutnya di [`docs/05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md); briefing kerja di [`docs/handoff-session.md`](handoff-session.md).
+Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (**246 test: 245 lulus + 1 skipped PwaTest** — termasuk 13 test browser Playwright), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Arah pengembangan berikutnya di [`docs/05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md); briefing kerja di [`docs/handoff-session.md`](handoff-session.md).
 
-Terakhir dikerjakan (**2026-08-21**): **rekomendasi 2.1 — E2E/browser testing (Playwright)** via `pestphp/pest-plugin-browser`. Suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik. Helper `loginBrowserAdmin()` di `tests/Pest.php`; trap `public/hot` basi di `.ai/rules/browser.md`. Sesi yang sama: merge `feature/import-export` → `main` + perbaikan bug runtime (migrasi `audit_logs` pending di DB lokal → 500 di route ter-audit).
+Terakhir dikerjakan (**2026-08-21**): **multi-cabang (rekomendasi 2.5)** + **email ringkasan bulanan (2.6)** + **cetak thermal (2.3)** + **realtime Reverb (2.4)** — detail teknis & panduan pakai di [`docs/06-multi-cabang-email-bulanan.md`](06-multi-cabang-email-bulanan.md) dan section B–B4 di [`docs/handoff-session.md`](handoff-session.md). Sisa roadmap: **deploy produksi saja** (paling akhir).
 
 ## Riwayat sesi
 
 | Sesi | Yang dikerjakan |
 | --- | --- |
-| 2.1 (2026-08-21) | **E2E/browser testing Playwright** — `pestphp/pest-plugin-browser` + Chromium; suite `tests/Browser` (8 test): smoke 31 route autentikasi (`assertNoSmoke`), POS → checkout → nota, servis → status → tracking publik. Juga: merge `feature/import-export` → `main`, fix migrasi `audit_logs` pending (500 runtime), trap `public/hot` basi. |
+| 2.3–2.6 (2026-08-21) | **Cetak thermal ESC/POS** (Web Bluetooth/Serial, dialog 58/80mm), **realtime notifikasi Laravel Reverb** (polling jadi fallback), **multi-cabang skema `store_id`** (konteks cabang, pindah cabang, CRUD cabang), **email ringkasan bulanan ke owner** (tanggal 1, penjualan/servis/hutang/stok). Detail: `docs/06-multi-cabang-email-bulanan.md` & handoff B–B4. |
+| 2.1–2.2 (2026-08-21) | **E2E/browser testing Playwright** (`pestphp/pest-plugin-browser`, suite `tests/Browser`) + merge `feature/import-export` → `main`; kemudian **PWA offline / antrean sinkronisasi POS** (idempotensi `client_reference`, auto-sync). |
 | 1.4 | Import/export CSV master + laporan (detail di atas). |
 | 1.3 | **Audit log aksi sensitif** — tabel + model `AuditLog`, helper `AuditLogger`/`StockManager` (event di sale/purchase/retur/servis/stok/2FA), halaman `/audit-logs` (filter + diff). `AuditLogTest` (9 test). Aturan: `.ai/rules/controllers.md` & `.ai/rules/support.md`. |
 | 1.2 | **Sistem notifikasi dikencangkan** — endpoint JSON `GET /notifications/summary` menggantikan shared prop (`notificationSummary` dihapus dari `HandleInertiaRequests`); `NotificationsProvider` polling 30 dtk + saat tab fokus (tanpa reload halaman); mark-as-read saat klik item popover/toast; hapus per item (`DELETE notifications/{notification}`, ownership 403); `notifications:prune` (default >90 hari) terjadwal daily. |
@@ -58,7 +59,12 @@ Terakhir dikerjakan (**2026-08-21**): **rekomendasi 2.1 — E2E/browser testing 
 - [x] Kartu lacak servis unduhan (PDF): QR + token tracking ukuran kartu kredit, dari halaman tracking publik & halaman servis
 - [x] Audit log aksi sensitif: pembayaran, retur, ubah status servis, ubah stok, login 2FA — halaman `/audit-logs` (filter + diff)
 - [x] Import/export CSV: master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); streaming native, BOM UTF-8, anti formula-injection
-- [x] E2E/browser test Playwright: smoke semua route autentikasi + alur kritis POS→nota & servis→tracking (`tests/Browser`, 8 test)
+- [x] E2E/browser test Playwright: smoke semua route autentikasi + alur kritis POS→nota & servis→tracking (`tests/Browser`, 13 test)
+- [x] PWA offline / antrean sinkronisasi POS: idempotensi `client_reference`, antrean localStorage + auto-sync, dialog retry/buang
+- [x] Cetak struk thermal ESC/POS langsung dari browser: Web Bluetooth & Web Serial, kertas 58/80mm, nota penjualan + tanda terima servis
+- [x] Realtime notifikasi via Laravel Reverb: push instan ke lonceng notifikasi, polling 30 dtk hanya fallback saat socket putus
+- [x] Multi-cabang (skema sederhana `store_id`): data terpisah per cabang, kasir/teknisi terikat cabang, owner pindah cabang dari header, CRUD cabang (admin/owner)
+- [x] Email ringkasan bulanan ke owner: penjualan per cabang, servis masuk/selesai, hutang jatuh tempo, stok menipis — otomatis tanggal 1 jam 07:00
 
 ## Todo pengembang (belum dikerjakan)
 
@@ -66,16 +72,16 @@ Prioritas tinggi:
 
 - [x] ~~Audit log untuk aksi sensitif~~ — **SELESAI (2026-08-15)**, rekomendasi 1.3.
 - [x] ~~Import/export data master & laporan (Excel/CSV)~~ — **SELESAI (2026-08-15)**, rekomendasi 1.4 (CSV; Excel/XLSX belum — CSV cukup untuk skala ini).
-- [x] ~~Browser/E2E testing (Playwright) sebagai pelengkap test Pest~~ — **SELESAI (2026-08-21)**, rekomendasi 2.1 (suite `tests/Browser`, 8 test).
-- [x] **PWA offline / antrean sinkronisasi POS** — ✅ SELESAI, rekomendasi 2.2 (idempotensi `client_reference`, antrean localStorage + auto-sync, dialog retry/buang, test feature & browser).
-- [ ] Dukungan multi-cabang / multi-toko (tenant)
+- [x] ~~Browser/E2E testing (Playwright) sebagai pelengkap test Pest~~ — **SELESAI (2026-08-21)**, rekomendasi 2.1.
+- [x] ~~PWA offline / antrean sinkronisasi POS~~ — **SELESAI**, rekomendasi 2.2.
+- [x] ~~Dukungan multi-cabang / multi-toko (tenant)~~ — **SELESAI (2026-08-21)**, rekomendasi 2.5 (skema sederhana `store_id`; detail di `docs/06-multi-cabang-email-bulanan.md`).
 
 Ide berikutnya (belum diprioritaskan):
 
-- [x] Cetak struk langsung dari tablet ke printer thermal/Bluetooth
-- [ ] Push notification web untuk notifikasi servis/stok di HP yang ter-install
-- [x] Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)
-- [ ] Ringkasan laporan otomatis mingguan/bulanan via email
+- [x] ~~Cetak struk langsung dari tablet ke printer thermal/Bluetooth~~ — **SELESAI (2026-08-21)**, rekomendasi 2.3.
+- [ ] Push notification web (service worker push) untuk notifikasi servis/stok di HP yang ter-install — realtime in-app sudah jalan via Reverb (2.4); ini untuk notifikasi saat app tertutup
+- [x] ~~Realtime notifikasi via Laravel Reverb (menggantikan polling 30 dtk)~~ — **SELESAI (2026-08-21)**, rekomendasi 2.4.
+- [x] ~~Ringkasan laporan otomatis mingguan/bulanan via email~~ — **SELESAI (2026-08-21)**, rekomendasi 2.6 (bulanan; mingguan belum dibutuhkan).
 - [ ] **Deploy ke hosting HTTPS + domain — PALING AKHIR**, hanya setelah semua modul selesai & verifikasi bebas error (runutan eksekusi final di bagian "Persiapan Produksi" di bawah)
 
 ## Persiapan Produksi — Runutan Terakhir
@@ -89,9 +95,10 @@ Masih tahap pengembangan; berikut **urutan eksekusi final** saat siap live (deta
 5. Build aset: `npm ci && npm run build` (menghasilkan `public/build` + PWA `manifest.webmanifest`/`sw.js`).
 6. Migrasi data: `php artisan migrate --force` (jangan `migrate:fresh` untuk data produksi) + `php artisan storage:link` bila perlu.
 7. Optimasi: `php artisan optimize` (config/route/view cache).
-8. Pasang cron scheduler: `* * * * * php /path/proyek/artisan schedule:run`.
-9. Verifikasi pasca-deploy: scan QR dari nota, buka `/tracking?token=…` dari HP & PC jaringan berbeda, percobaan ke-21 per IP → `429` (rate limit bekerja), login 2FA, unduh kartu lacak PDF.
-10. Cetak ulang tanda terima & kirim ulang link WhatsApp lama (QR lama masih menunjuk `localhost`) — opsional.
+8. Pasang cron scheduler: `* * * * * php /path/proyek/artisan schedule:run` (menjalankan backup, alert, prune notifikasi, dan email bulanan tanggal 1).
+9. Realtime (Reverb): jalankan supervisor/service untuk `php artisan reverb:start --port=8081`; set `VITE_REVERB_*` di `.env` **sebelum** `npm run build` (nilai ter-bake ke aset); WebSocket di belakang proxy wajib TLS + upgrade header.
+10. Verifikasi pasca-deploy: scan QR dari nota, buka `/tracking?token=…` dari HP & PC jaringan berbeda, percobaan ke-21 per IP → `429` (rate limit bekerja), login 2FA, unduh kartu lacak PDF, lonceng notifikasi muncul tanpa reload.
+11. Cetak ulang tanda terima & kirim ulang link WhatsApp lama (QR lama masih menunjuk `localhost`) — opsional.
 
 ## Catatan pengembang
 
