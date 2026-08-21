@@ -1,17 +1,18 @@
 # Status Proyek & Roadmap
 
-> Dokumen hidup — perbarui setiap kali satu tahap selesai. Terakhir diperbarui: **2026-08-15**.
+> Dokumen hidup — perbarui setiap kali satu tahap selesai. Terakhir diperbarui: **2026-08-21**.
 
 ## Status saat ini
 
-Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (215: 214 lulus + 1 skipped PwaTest), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Arah pengembangan berikutnya di [`docs/05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md); briefing kerja di [`docs/handoff-session.md`](handoff-session.md).
+Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (223: 222 lulus + 1 skipped PwaTest — termasuk 8 test browser Playwright), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Arah pengembangan berikutnya di [`docs/05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md); briefing kerja di [`docs/handoff-session.md`](handoff-session.md).
 
-Terakhir dikerjakan (**2026-08-15**): **rekomendasi 1.4 — import/export data master & laporan (CSV)**. Streaming CSV native (`app/Support/CsvStream.php` export + `app/Support/CsvImporter.php` import) — BOM UTF-8, anti formula-injection, header dinormalisasi ke snake_case. Export produk/pelanggan/supplier (`{resource}/export-csv`) + laporan penjualan/servis/hutang, import master via `ImportCsvDialog` (`{resource}/import-csv`). Retur pembelian & PO sengaja belum di-export (belum punya halaman laporan). `ImportExportTest` (9 test); aturan di `.ai/rules/support-support.md`.
+Terakhir dikerjakan (**2026-08-21**): **rekomendasi 2.1 — E2E/browser testing (Playwright)** via `pestphp/pest-plugin-browser`. Suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik. Helper `loginBrowserAdmin()` di `tests/Pest.php`; trap `public/hot` basi di `.ai/rules/browser.md`. Sesi yang sama: merge `feature/import-export` → `main` + perbaikan bug runtime (migrasi `audit_logs` pending di DB lokal → 500 di route ter-audit).
 
-## Riwayat sesi (2026-08-15)
+## Riwayat sesi
 
 | Sesi | Yang dikerjakan |
 | --- | --- |
+| 2.1 (2026-08-21) | **E2E/browser testing Playwright** — `pestphp/pest-plugin-browser` + Chromium; suite `tests/Browser` (8 test): smoke 31 route autentikasi (`assertNoSmoke`), POS → checkout → nota, servis → status → tracking publik. Juga: merge `feature/import-export` → `main`, fix migrasi `audit_logs` pending (500 runtime), trap `public/hot` basi. |
 | 1.4 | Import/export CSV master + laporan (detail di atas). |
 | 1.3 | **Audit log aksi sensitif** — tabel + model `AuditLog`, helper `AuditLogger`/`StockManager` (event di sale/purchase/retur/servis/stok/2FA), halaman `/audit-logs` (filter + diff). `AuditLogTest` (9 test). Aturan: `.ai/rules/controllers.md` & `.ai/rules/support.md`. |
 | 1.2 | **Sistem notifikasi dikencangkan** — endpoint JSON `GET /notifications/summary` menggantikan shared prop (`notificationSummary` dihapus dari `HandleInertiaRequests`); `NotificationsProvider` polling 30 dtk + saat tab fokus (tanpa reload halaman); mark-as-read saat klik item popover/toast; hapus per item (`DELETE notifications/{notification}`, ownership 403); `notifications:prune` (default >90 hari) terjadwal daily. |
@@ -57,6 +58,7 @@ Terakhir dikerjakan (**2026-08-15**): **rekomendasi 1.4 — import/export data m
 - [x] Kartu lacak servis unduhan (PDF): QR + token tracking ukuran kartu kredit, dari halaman tracking publik & halaman servis
 - [x] Audit log aksi sensitif: pembayaran, retur, ubah status servis, ubah stok, login 2FA — halaman `/audit-logs` (filter + diff)
 - [x] Import/export CSV: master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); streaming native, BOM UTF-8, anti formula-injection
+- [x] E2E/browser test Playwright: smoke semua route autentikasi + alur kritis POS→nota & servis→tracking (`tests/Browser`, 8 test)
 
 ## Todo pengembang (belum dikerjakan)
 
@@ -64,7 +66,7 @@ Prioritas tinggi:
 
 - [x] ~~Audit log untuk aksi sensitif~~ — **SELESAI (2026-08-15)**, rekomendasi 1.3.
 - [x] ~~Import/export data master & laporan (Excel/CSV)~~ — **SELESAI (2026-08-15)**, rekomendasi 1.4 (CSV; Excel/XLSX belum — CSV cukup untuk skala ini).
-- [ ] Browser/E2E testing (Playwright) sebagai pelengkap test Pest
+- [x] ~~Browser/E2E testing (Playwright) sebagai pelengkap test Pest~~ — **SELESAI (2026-08-21)**, rekomendasi 2.1 (suite `tests/Browser`, 8 test).
 - [ ] Dukungan multi-cabang / multi-toko (tenant)
 
 Ide berikutnya (belum diprioritaskan):

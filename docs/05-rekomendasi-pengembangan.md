@@ -1,6 +1,6 @@
 # Rekomendasi Pengembangan SerComp
 
-> Status: **fitur inti selesai**, verifikasi kualitas hijau (Pest 206 / 205 lulus + 1 skip, PHPStan 0 error, Pint, ESLint, Prettier, `tsc`, `npm run build`). Dokumen ini = peta prioritas pengembangan berikutnya, dari yang paling mendesak ke yang opsional.
+> Status: **fitur inti selesai**, verifikasi kualitas hijau (Pest 223 / 222 lulus + 1 skip — termasuk 8 test browser Playwright, PHPStan 0 error, Pint, ESLint, Prettier, `tsc`, `npm run build`). Dokumen ini = peta prioritas pengembangan berikutnya, dari yang paling mendesak ke yang opsional.
 
 ## 0. Prasyarat teknis yang disarankan sebelum semua itu
 
@@ -31,7 +31,7 @@ Produk, pelanggan, supplier, laporan penjualan/servis/hutang. Pakai `maatwebsite
 ## 2. Prioritas menengah
 
 ### 2.1 E2E / Browser testing (Playwright)
-Lapisan test saat ini 100% backend (Pest). Alur lintas halaman yang kritis (POS → checkout → nota, servis → status → tracking → WhatsApp) belum diuji di browser. Tambah smoke test semua route autentikasi (cek error JS + 5xx).
+Lapisan test saat ini 100% backend (Pest). Alur lintas halaman yang kritis (POS → checkout → nota, servis → status → tracking → WhatsApp) belum diuji di browser. Tambah smoke test semua route autentikasi (cek error JS + 5xx). — **SELESAI (2026-08-21)**: `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke` — bebas error JS & console), alur POS → checkout → nota (invoice, Lunas, stok berkurang), dan servis → status → tracking publik (+ state tidak ditemukan). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi tercatat di `.ai/rules/browser.md`.
 
 ### 2.2 PWA offline / antrean sinkronisasi POS
 PWA sudah bisa di-install. Berikutnya: simpan keranjang/transaksi offline lalu sinkron saat online (mode kasir yang putus jaringan), karena koneksi toko sering tidak stabil. Ini modul paling menantang — lakukan setelah 1.x selesai.
@@ -60,5 +60,5 @@ Integrasi Web Bluetooth/Web Serial atau protokol ESC/POS. Butuh riset kompatibil
 3. ~~Audit log aksi sensitif (1–2 hari).~~ — **SELESAI (2026-08-15)**.
 4. ~~Penguatan notifikasi: endpoint polling ringan + mark-read saat klik + cleanup~~ — **SELESAI (2026-08-15)**.
 5. ~~Import/export CSV/Excel (1–2 hari).~~ — **SELESAI (2026-08-15)**: streaming CSV native untuk master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via dialog.
-6. E2E Playwright smoke (1–2 hari).
+6. ~~E2E Playwright smoke (1–2 hari).~~ — **SELESAI (2026-08-21)**: suite `tests/Browser` (8 test) — smoke 31 route autentikasi + alur POS→nota & servis→tracking.
 7. Baru setelah itu: PWA offline, thermal print, realtime, multi-cabang (estimasi per-modul saat mulai).

@@ -6,18 +6,19 @@
 
 SerComp — aplikasi manajemen servis komputer + kasir/POS (Laravel 13, Inertia v3 + React 19, Tailwind v4, shadcn/ui, MySQL). Fitur inti **selesai semua**: servis, tracking publik, POS, stok, supplier/pembelian/hutang, laporan, RBAC, PWA, 2FA (TOTP + WhatsApp OTP), kartu lacak PDF, audit log, import/export CSV.
 
-**Git**: repo aktif. `main` = baseline commit; kerja terakhir ada di branch `feature/import-export` (fitur 1.4, siap di-merge). Seluruh perubahan sesi terakhir sudah di-commit di branch tersebut.
+**Git**: repo aktif. `feature/import-export` sudah **di-merge ke `main`** (fast-forward) dan branch fitur bisa dihapus. Kerja berikutnya mulai dari `main`.
 
-Verifikasi terkini (2026-08-15): **215 test Pest (214 lulus + 1 skipped PwaTest)**, PHPStan 0 error, Pint rapi, ESLint & Prettier bersih, `tsc --noEmit` bersih, `npm run build` sukses.
+Verifikasi terkini (2026-08-21): **223 test Pest (222 lulus + 1 skipped PwaTest — termasuk 8 test browser Playwright)**, PHPStan 0 error, Pint rapi. ESLint & Prettier bersih, `tsc --noEmit` bersih, `npm run build` sukses.
 
-## 2. Ringkasan yang sudah selesai (2026-08-15)
+## 2. Ringkasan yang sudah selesai
 
 | Rekomendasi | Status | Inti |
 | --- | --- | --- |
-| 1.3 Audit log aksi sensitif | ✅ SELESAI | Tabel + model `AuditLog`, helper `AuditLogger`/`StockManager`, event di sale/purchase/retur/servis/stok/2FA, halaman `/audit-logs` (filter + diff). `AuditLogTest` (9 test). |
+| 2.1 E2E/browser testing (Playwright) | ✅ SELESAI (2026-08-21) | `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik (+ not-found). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi → `.ai/rules/browser.md`. |
 | 1.4 Import/export CSV | ✅ SELESAI | Streaming CSV native: `app/Support/CsvStream.php` (export, BOM UTF-8, anti formula-injection) + `CsvImporter.php` (import streaming). Export master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via `ImportCsvDialog`. `ImportExportTest` (9 test). Aturan: `.ai/rules/support-support.md`. |
+| 1.3 Audit log aksi sensitif | ✅ SELESAI | Tabel + model `AuditLog`, helper `AuditLogger`/`StockManager`, event di sale/purchase/retur/servis/stok/2FA, halaman `/audit-logs` (filter + diff). `AuditLogTest` (9 test). |
 
-Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md`):
+Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 
 - **Notifikasi dikencangkan (1.2)**: endpoint JSON `GET /notifications/summary` menggantikan shared prop (`notificationSummary` dihapus dari `HandleInertiaRequests`); `NotificationsProvider` polling 30 dtk + saat tab fokus; mark-as-read saat klik; hapus per item (`DELETE notifications/{notification}`); `notifications:prune` (default >90 hari) terjadwal daily.
 - **Notifikasi murni in-app**: ketiga alert (`LowStockAlert`, `ServiceQueueAlert`, `ServiceReadyForPickupAlert`) `via() = ['database']` saja (email & WhatsApp otomatis dihapus — anti-spam); lonceng di `AppSidebarHeader`; popup toast sonner untuk notifikasi baru.
@@ -29,10 +30,7 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md`):
 
 ## 3. Siap dikerjakan berikutnya (urut saran)
 
-### A. Selesaikan & merge `feature/import-export` → `main`
-Verifikasi lintas-browser: export/import round-trip (Produk, Pelanggan, Supplier, Laporan), lalu merge branch. Commit sudah ada; tinggal `git checkout main && git merge feature/import-export` (+ push bila ada remote).
-
-### B. Deploy ke domain produksi (runutan terakhir)
+### A. Deploy ke domain produksi (runutan terakhir)
 Masih tahap pengembangan; urutan final saat siap live (checklist detail: `docs/03-operasional.md` & `docs/01-status-roadmap.md`):
 
 1. Siapkan hosting + domain + SSL (Laravel Cloud / Forge / VPS + nginx).
@@ -46,8 +44,10 @@ Masih tahap pengembangan; urutan final saat siap live (checklist detail: `docs/0
 9. Verifikasi pasca-deploy: scan QR, `/tracking?token=…` dari HP & PC beda jaringan, percobaan ke-21 → `429`, login 2FA, unduh kartu lacak PDF.
 10. Cetak ulang tanda terima & kirim ulang link WhatsApp lama (QR lama masih `localhost`) — opsional.
 
-### C. Roadmap berikutnya (lihat `docs/05-rekomendasi-pengembangan.md` §5)
-Urutan: **E2E / Browser testing (Playwright, 2.1)** → **PWA offline / antrean sinkronisasi POS (2.2)** → **cetak struk thermal/Bluetooth (2.3)** → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis. Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
+### B. Roadmap berikutnya (lihat `docs/05-rekomendasi-pengembangan.md` §5)
+Urutan: **PWA offline / antrean sinkronisasi POS (2.2)** → **cetak struk thermal/Bluetooth (2.3)** → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis. Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
+
+> Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).
 
 ## 4. Konvensi wajib (baca sebelum menulis kode)
 
@@ -61,7 +61,8 @@ Urutan: **E2E / Browser testing (Playwright, 2.1)** → **PWA offline / antrean 
 ## 5. Verifikasi kualitas
 
 ```bash
-php artisan test --compact            # seluruh test (sesi terakhir: 215 total = 214 lulus + 1 skip)
+php artisan test --compact            # seluruh test (sesi terakhir: 223 total = 222 lulus + 1 skip)
+./vendor/bin/pest tests/Browser       # hanya test browser Playwright
 vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 vendor/bin/pint --dirty --format agent
 npm run types:check
