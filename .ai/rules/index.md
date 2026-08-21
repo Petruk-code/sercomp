@@ -5,6 +5,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | app/Http/Controllers/Auth/** | .ai/rules/auth.md |
+| tests/Browser/** | .ai/rules/browser.md |
 | app/Http/Controllers/**, app/Http/Controllers/DashboardController.php, app/Http/Controllers/TrackingController.php | .ai/rules/controllers.md |
 | resources/css/** | .ai/rules/css.md |
 | **/*, composer.json | .ai/rules/general.md |

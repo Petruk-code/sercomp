@@ -15,6 +15,7 @@
 /resources/js/routes
 /resources/js/wayfinder
 /vendor
+/tests/Browser/Screenshots
 /database/*.sqlite
 /database/*.sqlite-journal
 /database/*.sqlite-wal

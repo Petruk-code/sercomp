@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /*
@@ -16,7 +18,19 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Browser');
+
+/*
+|--------------------------------------------------------------------------
+| Browser Defaults
+|--------------------------------------------------------------------------
+|
+| Halaman aplikasi memuat banyak modul via Vite; beri waktu lebih longgar
+| daripada default 5 detik agar smoke test tidak flaky saat dev server dingin.
+|
+*/
+
+pest()->browser()->timeout(15000);
 
 /*
 |--------------------------------------------------------------------------
@@ -47,4 +61,34 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Seed the four application roles (Spatie) — dipakai test Feature & Browser.
+ */
+function seedAppRoles(): void
+{
+    foreach (['admin', 'owner', 'cashier', 'technician'] as $role) {
+        Role::query()->updateOrCreate(['name' => $role], ['guard_name' => 'web']);
+    }
+}
+
+/**
+ * Login sebagai admin lewat form login asli di browser (bukan actingAs),
+ * sehingga session cookie browser valid untuk visit() berikutnya.
+ */
+function loginBrowserAdmin(): User
+{
+    seedAppRoles();
+
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    visit('/login')
+        ->fill('email', $user->email)
+        ->fill('password', 'password')
+        ->click('@login-button')
+        ->assertPathIs('/dashboard');
+
+    return $user;
 }
