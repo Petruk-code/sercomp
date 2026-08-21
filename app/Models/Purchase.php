@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\PurchaseFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $paid_amount
  * @property string $payment_status
  * @property string|null $notes
+ * @property int|null $store_id
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -42,7 +44,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Purchase extends Model
 {
     /** @use HasFactory<PurchaseFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     public const PAYMENT_METHODS = ['cash', 'transfer', 'qris'];
 

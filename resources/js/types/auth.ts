@@ -6,6 +6,7 @@ export type User = {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    store_id?: number | null;
     roles?: Array<{ id: number; name: string }>;
     [key: string]: unknown;
 };

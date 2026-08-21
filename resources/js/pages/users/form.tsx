@@ -6,15 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index } from '@/routes/users';
-import type { Role, User } from '@/types';
+import type { Role, Store, User } from '@/types';
 
 type Props = {
-    user: Pick<User, 'id' | 'name' | 'email'> | null;
+    user: Pick<User, 'id' | 'name' | 'email' | 'store_id'> | null;
     currentRole?: string | null;
     roles: Role[];
+    stores: Store[];
 };
 
-export default function UserForm({ user, currentRole, roles }: Props) {
+export default function UserForm({
+    user,
+    currentRole,
+    roles,
+    stores,
+}: Props) {
     return (
         <>
             <Head title={user ? 'Edit Pengguna' : 'Tambah Pengguna'} />
@@ -81,6 +87,34 @@ export default function UserForm({ user, currentRole, roles }: Props) {
                             </select>
                             <InputError message={errors.role} />
                         </div>
+
+                        {stores.length > 0 && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="store_id">
+                                    Cabang (opsional)
+                                </Label>
+                                <select
+                                    id="store_id"
+                                    name="store_id"
+                                    defaultValue={user?.store_id ?? ''}
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                                >
+                                    <option value="">
+                                        Bebas pindah semua cabang
+                                    </option>
+                                    {stores.map((store) => (
+                                        <option key={store.id} value={store.id}>
+                                            {store.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-muted-foreground">
+                                    Kosongkan untuk owner/admin yang boleh
+                                    memilih cabang sendiri.
+                                </p>
+                                <InputError message={errors.store_id} />
+                            </div>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="password">

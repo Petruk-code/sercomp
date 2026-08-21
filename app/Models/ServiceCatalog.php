@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Database\Factories\ServiceCatalogFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property string $price
  * @property int|null $estimated_minutes
+ * @property int|null $store_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -23,7 +25,7 @@ use Illuminate\Support\Carbon;
 class ServiceCatalog extends Model
 {
     /** @use HasFactory<ServiceCatalogFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     /**
      * Get the attributes that should be cast.

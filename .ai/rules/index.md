@@ -6,6 +6,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --- | --- |
 | app/Http/Controllers/Auth/** | .ai/rules/auth.md |
 | tests/Browser/** | .ai/rules/browser.md |
+| app/Concerns/BelongsToStore.php | .ai/rules/concerns.md |
 | app/Http/Controllers/**, app/Http/Controllers/DashboardController.php, app/Http/Controllers/TrackingController.php | .ai/rules/controllers.md |
 | resources/css/** | .ai/rules/css.md |
 | **/*, composer.json | .ai/rules/general.md |
@@ -24,6 +25,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Controllers/Settings/*.php | .ai/rules/settings.md |
 | app/Http/Controllers/Supplier/** | .ai/rules/supplier.md |
 | app/Support/CsvStream.php,app/Support/CsvImporter.php | .ai/rules/support-support.md |
-| app/Support/InvoiceNumber.php, app/Support/** | .ai/rules/support.md |
+| app/Support/InvoiceNumber.php, app/Support/**, app/Support/StoreContext.php | .ai/rules/support.md |
 | tests/** | .ai/rules/tests.md |
 | resources/views/app.blade.php | .ai/rules/views.md |

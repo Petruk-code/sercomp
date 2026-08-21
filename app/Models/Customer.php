@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $email
  * @property string|null $address
  * @property string|null $notes
+ * @property int|null $store_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -23,7 +25,7 @@ use Illuminate\Support\Carbon;
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     /**
      * @return HasMany<ServiceOrder, $this>

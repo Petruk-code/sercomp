@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string $paid_amount
  * @property string|null $notes
  * @property string|null $client_reference
+ * @property int|null $store_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -46,7 +48,7 @@ use Illuminate\Support\Carbon;
 class Sale extends Model
 {
     /** @use HasFactory<SaleFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     public const PAYMENT_METHODS = ['cash', 'transfer', 'qris'];
 

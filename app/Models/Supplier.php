@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Database\Factories\SupplierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $email
  * @property string|null $address
  * @property string|null $notes
+ * @property int|null $store_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -24,7 +26,7 @@ use Illuminate\Support\Carbon;
 class Supplier extends Model
 {
     /** @use HasFactory<SupplierFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     /**
      * @return HasMany<Product, $this>

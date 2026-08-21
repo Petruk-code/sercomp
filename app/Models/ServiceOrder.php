@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\BelongsToStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\ServiceOrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string|null $warranty_notes
  * @property CarbonImmutable|null $completed_at
  * @property CarbonImmutable|null $estimated_completion_at
+ * @property int|null $store_id
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -59,7 +61,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ServiceOrder extends Model
 {
     /** @use HasFactory<ServiceOrderFactory> */
-    use HasFactory;
+    use BelongsToStore, HasFactory;
 
     public const STATUSES = ['pending', 'diagnosed', 'in_progress', 'done', 'taken', 'cancelled'];
 

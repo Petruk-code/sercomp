@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BarChart3,
     Boxes,
+    Building2,
     LayoutGrid,
     Package,
     Receipt,
@@ -114,6 +115,7 @@ export function AppSidebar() {
                 { title: 'Supplier', href: '/suppliers', icon: Truck },
                 { title: 'Pengguna', href: '/users', icon: UserCog },
                 { title: 'Manajemen Role', href: '/roles', icon: ShieldCheck },
+                { title: 'Cabang', href: '/stores', icon: Building2 },
             ].filter((item) => {
                 if (item.href === '/customers') {
                     return is('admin', 'owner', 'cashier');

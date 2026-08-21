@@ -2,6 +2,7 @@
 paths:
   - app/Support/InvoiceNumber.php
   - 'app/Support/**'
+  - app/Support/StoreContext.php
 ---
 
 # Support
@@ -17,3 +18,6 @@ StockManager::increment/decrement wraps the change in Product::withoutEvents() s
 
 ## Runtime 500 "table doesn't exist" = jalankan migrate dulu
 AuditLogger menulis ke tabel audit_logs dari banyak controller/observer. Test suite lolos walau migrasi lokal pending karena RefreshDatabase hanya berlaku di DB testing. Jika muncul SQLSTATE[42S02] saat akses route di lokal, cek `php artisan migrate:status` dan jalankan `php artisan migrate` sebelum debugging kode.
+
+## StoreContext memo di container, bukan static
+Memo cabang aktif WAJIB disimpan via container instance (app()->instance/forgetInstance), bukan properti static. Static bocor antar-test Pest karena HandleInertiaRequests::share() ikut tereksekusi saat render halaman error (mis. 403 role middleware), sehingga konteks cabang test sebelumnya memengaruhi test berikutnya. Static juga tidak aman untuk Octane/long-running worker. Resolusi konteks: users.store_id (terikat) → session active_store_id (tervalidasi) → null = tanpa scoping (console/publik).

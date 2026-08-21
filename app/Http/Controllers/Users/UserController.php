@@ -7,6 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 use App\Models\Role;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class UserController extends Controller
         return Inertia::render('users/index', [
             'users' => $users,
             'roles' => Role::query()->orderBy('name')->get(['id', 'name', 'label']),
+            'stores' => Store::query()->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -44,7 +46,9 @@ class UserController extends Controller
     {
         return Inertia::render('users/form', [
             'user' => null,
+            'currentRole' => null,
             'roles' => Role::query()->orderBy('name')->get(['id', 'name', 'label']),
+            'stores' => Store::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -57,6 +61,7 @@ class UserController extends Controller
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'password' => $request->input('password'),
+            'store_id' => $request->input('store_id'),
         ]);
 
         $user->syncRoles([$request->input('role')]);
@@ -74,9 +79,10 @@ class UserController extends Controller
         $user->load('roles:id,name');
 
         return Inertia::render('users/form', [
-            'user' => $user->only(['id', 'name', 'email']),
+            'user' => $user->only(['id', 'name', 'email', 'store_id']),
             'currentRole' => $user->getRoleNames()->first(),
             'roles' => Role::query()->orderBy('name')->get(['id', 'name', 'label']),
+            'stores' => Store::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -97,6 +103,7 @@ class UserController extends Controller
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'password' => $request->filled('password') ? $request->input('password') : $user->password,
+            'store_id' => $request->input('store_id'),
         ]);
 
         $user->syncRoles([$role]);

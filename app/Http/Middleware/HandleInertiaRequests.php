@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Store;
+use App\Support\StoreContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,12 +37,19 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user()?->load('roles'),
+                'user' => $user?->load('roles'),
             ],
+            // Daftar cabang utk pindah konteks — hanya utk user bebas (owner/admin).
+            'stores' => $user !== null && StoreContext::canSwitch($user)
+                ? Store::query()->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                : [],
+            'activeStoreId' => StoreContext::id(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

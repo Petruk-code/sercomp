@@ -88,6 +88,14 @@ export type Role = {
     label?: string | null;
 };
 
+export type Store = {
+    id: number;
+    name: string;
+    address?: string | null;
+    phone?: string | null;
+    is_active: boolean;
+};
+
 export type UserWithRole = {
     id: number;
     name: string;

@@ -12,6 +12,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Sales\SaleController;
 use App\Http\Controllers\Service\ServiceOrderController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Supplier\PurchaseController;
 use App\Http\Controllers\Supplier\PurchaseReturnController;
 use App\Http\Controllers\TrackingController;
@@ -93,6 +94,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('supplier/returns/{purchaseReturn}', [PurchaseReturnController::class, 'destroy'])->name('supplier.returns.destroy');
 
         Route::resource('roles', RoleController::class)->parameters(['roles' => 'role'])->names('roles')->except('show');
+
+        // Multi-cabang
+        Route::put('stores/active', [StoreController::class, 'switchActive'])->name('stores.active');
+        Route::resource('stores', StoreController::class)->parameters(['stores' => 'store'])->names('stores')->except(['show', 'destroy']);
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/create', [UserController::class, 'create'])->name('users.create');
