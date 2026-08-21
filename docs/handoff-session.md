@@ -8,12 +8,13 @@ SerComp — aplikasi manajemen servis komputer + kasir/POS (Laravel 13, Inertia 
 
 **Git**: repo aktif. `feature/import-export` sudah **di-merge ke `main`** (fast-forward) dan branch fitur bisa dihapus. Kerja berikutnya mulai dari `main`.
 
-Verifikasi terkini (2026-08-21): **223 test Pest (222 lulus + 1 skipped PwaTest — termasuk 8 test browser Playwright)**, PHPStan 0 error, Pint rapi. ESLint & Prettier bersih, `tsc --noEmit` bersih, `npm run build` sukses.
+Verifikasi terkini (2026-08-21): **230 test Pest (229 lulus + 1 skipped PwaTest — termasuk 11 test browser Playwright)**, PHPStan 0 error, Pint rapi. ESLint & Prettier bersih, `tsc --noEmit` bersih, `npm run build` sukses.
 
 ## 2. Ringkasan yang sudah selesai
 
 | Rekomendasi | Status | Inti |
 | --- | --- | --- |
+| 2.2 PWA offline / antrean sinkronisasi POS | ✅ SELESAI (2026-08-21) | Idempotensi `sales.client_reference` unik (+ header `X-Offline-Sync` → JSON); antrean & draf keranjang localStorage (`lib/offline-sales.ts`); checkout offline-aware (`onNetworkError` → enqueue, auto-sync saat mount/event `online`); dialog antrean retry/buang; badge Offline. Test: `PosOfflineSyncTest` (4) + `PosOfflineQueueTest` (3 browser). Trap infrastruktur: tiap `visit()` = context baru → login lanjut dari page instance sama (`.ai/rules/browser.md`). |
 | 2.1 E2E/browser testing (Playwright) | ✅ SELESAI (2026-08-21) | `pestphp/pest-plugin-browser` + Playwright Chromium; suite `tests/Browser` (8 test / 100 assertion): smoke 31 route autentikasi lewat login form asli (`assertNoSmoke`), alur POS → checkout → nota, servis → status → tracking publik (+ not-found). Helper `loginBrowserAdmin()` di `tests/Pest.php`. Trap `public/hot` basi → `.ai/rules/browser.md`. |
 | 1.4 Import/export CSV | ✅ SELESAI | Streaming CSV native: `app/Support/CsvStream.php` (export, BOM UTF-8, anti formula-injection) + `CsvImporter.php` (import streaming). Export master (produk/pelanggan/supplier) + laporan (penjualan/servis/hutang); import master via `ImportCsvDialog`. `ImportExportTest` (9 test). Aturan: `.ai/rules/support-support.md`. |
 | 1.3 Audit log aksi sensitif | ✅ SELESAI | Tabel + model `AuditLog`, helper `AuditLogger`/`StockManager`, event di sale/purchase/retur/servis/stok/2FA, halaman `/audit-logs` (filter + diff). `AuditLogTest` (9 test). |
@@ -25,7 +26,7 @@ Sesi-sesi sebelumnya hari ini (detail teknis di `docs/01-status-roadmap.md'):
 - **WhatsApp 2FA + OTP**: kode OTP 6 digit via Fonnte ke `users.phone`; challenge login sebelum TOTP; hash bcrypt + kedaluwarsa 5 menit + maks 3 percobaan; pengiriman nyata **hanya** saat `APP_ENV=production` (lokal hanya log). Panduan: `docs/04-whatsapp-2fa-otp.md`.
 - **2FA TOTP**: Google Authenticator + recovery codes, challenge login, confirm-password, rate limit.
 - **Kartu lacak servis (PDF)**: `GET /tracking/card?token=…` (30/menit/IP), kartu kredit 86×54mm, QR memakai token.
-- **Notifikasi WhatsApp ke pelanggan — MANUAL saja**: tombol "Kirim WhatsApp" di detail servis (admin/owner/casher); auto-kirim saat `done` dihapus (anti-spam).
+- **Notifikasi WhatsApp ke pelanggan — MANUAL saja**: tombol "Kirim WhatsApp" di detail servis (admin/owner/casher); auto-kirim saat `done` dihapus (anti-spam). **Diaudit ulang 2026-08-21 setelah laporan pembatasan nomor: TIDAK ada jalur auto-kirim tersisa** — `WhatsApp::send` (Fonnte) hanya dipanggil dari tombol manual & OTP 2FA login; ketiga alert otomatis murni `['database']`; perilaku dikunci test `CustomerWhatsappNotificationTest` (termasuk "marking done does NOT auto-send"). Jangan pernah menambah channel WA pada notifikasi/jadwal/observer.
 - **Bug fix review**: prop `notifications` → `notificationSummary` (tabrakan di halaman `/notifications`), toast pertama "tertelan" (guard `seenIds.size === 0` → ref `initialized`), qty POS di-clamp `Math.min(Math.max(qty,1), product.stock)`.
 
 ## 3. Checklist status & siap dikerjakan berikutnya (urut saran)
@@ -50,7 +51,13 @@ Implementasi yang sudah jalan:
 - **Test browser**: `tests/Browser/PosOfflineQueueTest.php` (auto-sync sukses, gagal stok → status failed, restore draf keranjang).
 - Catatan infrastruktur test: setiap `visit()` = context browser baru; login harus dilanjutkan dari page instance yang sama (lihat `.ai/rules/browser.md`).
 
-### B. Setelah 2.2: cetak struk thermal (2.3) — BERIKUTNYA → realtime (Reverb), push notification web, multi-cabang, ringkasan laporan otomatis
+### B. Cetak struk thermal/Bluetooth (2.3) — BERIKUTNYA → realtime (Reverb), push web, multi-cabang, ringkasan otomatis
+Poin desain:
+- Cetak langsung dari browser ke printer thermal via **Web Bluetooth / Web Serial** (protokol ESC/POS, lebar 58/80mm); fallback: dialog print browser dengan layout struk khusus cetak.
+- Sumber struk: nota penjualan retail (`sales.show`) & tanda terima servis (`services.show`) — data sudah ada, tinggal formatter.
+- Simpan perangkat printer terakhir di localStorage agar tidak pairing ulang tiap cetak.
+- Riset kompatibilitas perangkat dulu (tidak semua printer thermal punya Bluetooth LE); iterasi terpisah dari fallback print.
+
 Konvensi wajib sebelum mulai: baca `.ai/rules/index.md` + rule yang match path.
 
 > Catatan test browser: jalankan `./vendor/bin/pest tests/Browser` — butuh aset build (`npm run build`) atau dev server hidup; jika semua halaman timeout + log "[vite] server connection lost", hapus `public/hot` yang basi (lihat `.ai/rules/browser.md`).
