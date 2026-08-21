@@ -4,9 +4,9 @@
 
 ## Status saat ini
 
-Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (**246 test: 245 lulus + 1 skipped PwaTest** — termasuk 13 test browser Playwright), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Arah pengembangan berikutnya di [`docs/05-rekomendasi-pengembangan.md`](05-rekomendasi-pengembangan.md); briefing kerja di [`docs/handoff-session.md`](handoff-session.md).
+Semua fitur inti **selesai** dan seluruh verifikasi kualitas **hijau**: Pest (**246 test: 245 lulus + 1 skipped PwaTest** — termasuk 13 test browser Playwright), PHPStan 0 error, Pint, ESLint, Prettier, `tsc --noEmit`, dan `npm run build`. Konvensi & verifikasi di [`docs/02-arsitektur-konvensi.md`](02-arsitektur-konvensi.md).
 
-Terakhir dikerjakan (**2026-08-21**): **multi-cabang (rekomendasi 2.5)** + **email ringkasan bulanan (2.6)** + **cetak thermal (2.3)** + **realtime Reverb (2.4)** — detail teknis & panduan pakai di [`docs/06-multi-cabang-email-bulanan.md`](06-multi-cabang-email-bulanan.md) dan section B–B4 di [`docs/handoff-session.md`](handoff-session.md). Sisa roadmap: **deploy produksi saja** (paling akhir).
+Terakhir dikerjakan (**2026-08-21**): **multi-cabang (rekomendasi 2.5)** + **email ringkasan bulanan (2.6)** + **cetak thermal (2.3)** + **realtime Reverb (2.4)** — detail teknis & panduan pakai di [`docs/06-multi-cabang-email-bulanan.md`](06-multi-cabang-email-bulanan.md). Sisa roadmap: **deploy produksi saja** (paling akhir; runutan di bagian "Persiapan Produksi" di bawah & [`docs/03-operasional.md`](03-operasional.md)).
 
 ## Riwayat sesi
 
